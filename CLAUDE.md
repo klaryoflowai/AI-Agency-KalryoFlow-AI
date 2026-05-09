@@ -48,7 +48,7 @@ LLM-ul e stochastic. Business logica e deterministă. Le separăm strict.
 ### Layer 3: Shared Utilities
 - `infrastructure/` — Supabase schema, n8n config, dashboard setup
 - `resources/` — pricing matrix, templates, brief freelancer
-- `execution/` — scripturi comune reutilizabile între agenți
+- `execution/` — runner zero-API și scripturi comune reutilizabile între agenți
 
 ---
 
@@ -210,6 +210,7 @@ Se încarcă automat la fiecare sesiune:
 - [x] SKILL.md pentru toți cei 8 agenți
 - [x] Schema Supabase documentată
 - [x] CLAUDE.md complet și upgradrat
+- [x] Execution Runner v0 pentru prompt packets și validare JSON
 - [x] .gitignore + .env.example setup
 - [ ] Implementare backend Python per agent
 - [ ] Workflow-uri n8n

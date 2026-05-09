@@ -18,6 +18,7 @@ Această alegere reduce costul, păstrează controlul uman și permite validarea
 | Dashboard | Next.js + Vercel | UI rapid, ieftin, ușor de extins |
 | UI kit | Tailwind + shadcn/ui | Componente B2B rapide și coerente |
 | QA | Playwright + pytest + Vitest | Verificare reală înainte de livrare |
+| Runner MVP | `execution/agency.py` | Prompt packets, output folders, JSON validation |
 | Versionare | Git + GitHub | Audit, rollback, colaborare |
 
 ---
@@ -52,4 +53,3 @@ Condiții obligatorii:
 3. Cheia este în backend/secrets manager, niciodată în frontend sau Git.
 4. Există limită de cost și fallback uman.
 5. QA Agent validează scenariile de eroare.
-

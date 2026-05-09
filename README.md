@@ -55,6 +55,7 @@ ai-agency/
 - [x] Prompt-uri și contracte agenți scrise
 - [x] Schema Supabase documentată
 - [x] Strategie MVP zero API definită
+- [x] Execution Runner v0 pentru prompt packets și validare JSON
 - [ ] Infrastructură configurată
 - [ ] Dashboard UI
 - [ ] Primul proiect pilot
@@ -71,9 +72,9 @@ ai-agency/
 | Dashboard UI | Vercel + Next.js |
 | QA browser | Playwright |
 | Versionare | Git + GitHub |
+| Runner MVP | `python3 execution/agency.py` |
 
 ---
 
 ## Principiul de Cost
 În MVP, agenția folosește abonamentele Codex/Claude Code pentru analiză, implementare, QA și documentație. Nu se adaugă chei `ANTHROPIC_API_KEY` sau alte chei LLM în proiect decât pentru automatizări client aprobate explicit.
-

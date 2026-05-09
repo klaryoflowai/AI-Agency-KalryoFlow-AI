@@ -55,10 +55,12 @@ AGENT = Role Prompt      (identitate + responsabilități)
 4. Eval Agent analizează → returnează plan JSON + SOW draft
 5. CEO aprobă scope-ul și costul
 6. Orchestratorul activează Backend, Frontend, Ops, BD etc. după plan
-7. Codex/Claude Code execută agenții ca operatori, nu ca API runtime
-8. Output-urile se salvează în Supabase și în projects/<id>/outputs/
-9. QA Agent verifică tot înainte de livrare
-10. Client Success Agent preia follow-up la 7/30/90 zile
+7. `execution/agency.py` generează prompt packet-uri pentru operatorii Codex/Claude Code
+8. Codex/Claude Code execută agenții ca operatori, nu ca API runtime
+9. Runner-ul validează JSON-urile de output și loghează local în `.tmp/agency/`
+10. Output-urile se salvează în Supabase și în projects/<id>/outputs/
+11. QA Agent verifică tot înainte de livrare
+12. Client Success Agent preia follow-up la 7/30/90 zile
 ```
 
 ---

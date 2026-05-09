@@ -1,0 +1,531 @@
+#!/usr/bin/env python3
+"""Zero-API execution runner for the AI Agency MVP.
+
+The runner does not call any LLM provider. It prepares operator prompt packets,
+creates output folders, and validates JSON outputs produced by Codex/Claude Code.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PROJECTS_DIR = ROOT / "projects"
+TMP_RUNS_DIR = ROOT / ".tmp" / "agency"
+
+
+@dataclass(frozen=True)
+class AgentContract:
+    name: str
+    schema_version: str
+    output_json: str
+    owner: str
+    required_fields: tuple[str, ...]
+    extra_outputs: tuple[str, ...] = ()
+
+
+AGENTS: dict[str, AgentContract] = {
+    "orchestrator": AgentContract(
+        name="orchestrator",
+        schema_version="orchestrator.v1",
+        output_json="orchestration.json",
+        owner="Codex or Claude Code",
+        required_fields=(
+            "schema_version",
+            "project_id",
+            "agents_activated",
+            "execution_order",
+            "human_approval_required",
+            "estimated_completion",
+            "notes",
+        ),
+    ),
+    "eval-agent": AgentContract(
+        name="eval-agent",
+        schema_version="eval-agent.v1",
+        output_json="evaluation.json",
+        owner="Codex or Claude Code; CEO approval required",
+        required_fields=(
+            "schema_version",
+            "feasibility",
+            "complexity_score",
+            "estimated_hours",
+            "estimated_cost_eur",
+            "timeline_weeks",
+            "risks",
+            "agents_needed",
+            "runtime_llm_needed",
+            "runtime_llm_cost_estimate_eur_month",
+            "clarifying_questions",
+            "sow_draft",
+            "recommendation",
+            "notes",
+        ),
+        extra_outputs=("sow.md",),
+    ),
+    "bd-agent": AgentContract(
+        name="bd-agent",
+        schema_version="bd-agent.v1",
+        output_json="proposal.json",
+        owner="Codex or Claude Code; CEO approves before send",
+        required_fields=(
+            "schema_version",
+            "document_type",
+            "subject",
+            "content",
+            "cta",
+            "next_followup_days",
+            "notes",
+        ),
+        extra_outputs=("proposal.md",),
+    ),
+    "backend-agent": AgentContract(
+        name="backend-agent",
+        schema_version="backend-agent.v1",
+        output_json="implementation-report.json",
+        owner="Codex",
+        required_fields=(
+            "schema_version",
+            "task_completed",
+            "files",
+            "endpoints",
+            "env_vars_needed",
+            "dependencies",
+            "runtime_llm_used",
+            "setup_instructions",
+            "handoff_to_frontend",
+            "notes",
+        ),
+        extra_outputs=("README.md",),
+    ),
+    "frontend-agent": AgentContract(
+        name="frontend-agent",
+        schema_version="frontend-agent.v1",
+        output_json="implementation-report.json",
+        owner="Claude Code",
+        required_fields=(
+            "schema_version",
+            "task_completed",
+            "files",
+            "pages",
+            "env_vars_needed",
+            "dependencies",
+            "runtime_llm_used",
+            "setup_instructions",
+            "handoff_to_qa",
+            "notes",
+        ),
+        extra_outputs=("README.md",),
+    ),
+    "ops-agent": AgentContract(
+        name="ops-agent",
+        schema_version="ops-agent.v1",
+        output_json="workflow-design.json",
+        owner="Codex or Claude Code",
+        required_fields=(
+            "schema_version",
+            "process_map",
+            "automation_opportunities",
+            "recommended_automations",
+            "workflow_design",
+            "n8n_workflow_json",
+            "sop_document",
+            "training_notes",
+        ),
+        extra_outputs=("sop.md",),
+    ),
+    "qa-agent": AgentContract(
+        name="qa-agent",
+        schema_version="qa-agent.v1",
+        output_json="qa-report.json",
+        owner="Independent QA operator",
+        required_fields=(
+            "schema_version",
+            "qa_score",
+            "status",
+            "backend_tests",
+            "frontend_tests",
+            "e2e_tests",
+            "sow_coverage",
+            "bugs_found",
+            "delivery_checklist",
+            "user_guide",
+            "handover_notes",
+        ),
+        extra_outputs=("user-guide.md",),
+    ),
+    "marketing-agent": AgentContract(
+        name="marketing-agent",
+        schema_version="marketing-agent.v1",
+        output_json="content.json",
+        owner="Claude Code or Codex; CEO approves before publish",
+        required_fields=(
+            "schema_version",
+            "content_type",
+            "title",
+            "content",
+            "cta",
+            "target_audience",
+            "distribution_channels",
+            "notes",
+        ),
+    ),
+    "client-success-agent": AgentContract(
+        name="client-success-agent",
+        schema_version="client-success-agent.v1",
+        output_json="client-success.json",
+        owner="Claude Code or Codex; CEO approves before send",
+        required_fields=(
+            "schema_version",
+            "communication_type",
+            "client_id",
+            "content",
+            "upsell_opportunities",
+            "health_score",
+            "action_required",
+            "next_touchpoint_days",
+        ),
+    ),
+}
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def slug_timestamp() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+
+def fail(message: str, code: int = 1) -> None:
+    print(f"ERROR: {message}", file=sys.stderr)
+    raise SystemExit(code)
+
+
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        fail(f"Missing file: {path.relative_to(ROOT)}")
+
+
+def write_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def write_json(path: Path, data: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def project_dir(project_id: str) -> Path:
+    path = PROJECTS_DIR / project_id
+    if not path.is_dir():
+        fail(f"Project not found: projects/{project_id}")
+    if not (path / "PROJECT.md").is_file():
+        fail(f"Project is missing PROJECT.md: projects/{project_id}")
+    return path
+
+
+def contract_for(agent_name: str) -> AgentContract:
+    try:
+        return AGENTS[agent_name]
+    except KeyError:
+        names = ", ".join(sorted(AGENTS))
+        fail(f"Unknown agent '{agent_name}'. Available agents: {names}")
+
+
+def output_dir(project_id: str, agent_name: str) -> Path:
+    return project_dir(project_id) / "outputs" / agent_name
+
+
+def output_json_path(project_id: str, contract: AgentContract) -> Path:
+    return output_dir(project_id, contract.name) / contract.output_json
+
+
+def parse_active_agents(project_md: str) -> list[str]:
+    active: list[str] = []
+    for line in project_md.splitlines():
+        match = re.match(r"- \[x\]\s+([a-z-]+)\s+", line.strip())
+        if match:
+            active.append(match.group(1))
+    return active
+
+
+def log_event(project_id: str, event: dict[str, Any]) -> None:
+    run_dir = TMP_RUNS_DIR / project_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    event = {"created_at": now_iso(), **event}
+    with (run_dir / "runs.jsonl").open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+
+def prompt_packet(project_id: str, contract: AgentContract) -> str:
+    project_path = project_dir(project_id)
+    skill_path = ROOT / "agents" / contract.name / "SKILL.md"
+    project_md = read_text(project_path / "PROJECT.md")
+    skill_md = read_text(skill_path)
+    pricing_md = read_text(ROOT / "resources" / "pricing-matrix.md")
+    owner_doc = read_text(ROOT / "docs" / "codex-claude-operating-model.md")
+    required = "\n".join(f"- `{field}`" for field in contract.required_fields)
+    extra = "\n".join(f"- `{name}`" for name in contract.extra_outputs) or "- none"
+
+    return f"""# Operator Prompt Packet
+
+## Metadata
+- project_id: `{project_id}`
+- agent: `{contract.name}`
+- recommended_operator: `{contract.owner}`
+- generated_at: `{now_iso()}`
+- output_json: `projects/{project_id}/outputs/{contract.name}/{contract.output_json}`
+
+## Zero-API MVP Rules
+- Do not call Anthropic/OpenAI/provider APIs.
+- Do not add paid LLM SDKs or runtime API keys.
+- If runtime LLM is needed for the client, flag it explicitly with cost estimate and CEO approval requirement.
+- Respect file ownership: Backend Agent output -> Codex, Frontend Agent output -> Claude Code, QA last and independent.
+- Do not edit `agents/*/SKILL.md`, `AGENTS.md`, `CLAUDE.md`, or `docs/rules/*` unless explicitly approved.
+
+## Required JSON Fields
+{required}
+
+## Extra Expected Outputs
+{extra}
+
+## Task
+Read the project brief and the agent skill below. Produce the required JSON output and any extra outputs in the exact output folder.
+
+After writing outputs, run:
+
+```bash
+python3 execution/agency.py validate {contract.name} {project_id}
+```
+
+## Project
+```markdown
+{project_md}
+```
+
+## Agent Skill
+```markdown
+{skill_md}
+```
+
+## Pricing Matrix
+```markdown
+{pricing_md}
+```
+
+## Codex/Claude Operating Model
+```markdown
+{owner_doc}
+```
+"""
+
+
+def cmd_list_agents(_args: argparse.Namespace) -> int:
+    for name in sorted(AGENTS):
+        contract = AGENTS[name]
+        print(f"{name:22} owner={contract.owner} output={contract.output_json}")
+    return 0
+
+
+def cmd_prepare(args: argparse.Namespace) -> int:
+    contract = contract_for(args.agent)
+    project_path = project_dir(args.project_id)
+    out_dir = output_dir(args.project_id, contract.name)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    packet = prompt_packet(args.project_id, contract)
+    packet_path = TMP_RUNS_DIR / args.project_id / f"{slug_timestamp()}_{contract.name}_prompt.md"
+    write_text(packet_path, packet)
+
+    state = {
+        "schema_version": "agency-runner.v1",
+        "project_id": args.project_id,
+        "agent": contract.name,
+        "status": "prepared",
+        "recommended_operator": contract.owner,
+        "prompt_packet": str(packet_path.relative_to(ROOT)),
+        "output_json": str(output_json_path(args.project_id, contract).relative_to(ROOT)),
+        "prepared_at": now_iso(),
+    }
+    write_json(out_dir / ".runner-state.json", state)
+    log_event(args.project_id, {"event": "prepared", "agent": contract.name, "prompt_packet": state["prompt_packet"]})
+
+    print(f"Prepared {contract.name} for {args.project_id}")
+    print(f"Prompt packet: {packet_path.relative_to(ROOT)}")
+    print(f"Output folder: {out_dir.relative_to(ROOT)}")
+    print(f"Expected JSON: {output_json_path(args.project_id, contract).relative_to(ROOT)}")
+    print(f"Recommended operator: {contract.owner}")
+    print(f"Project file: {(project_path / 'PROJECT.md').relative_to(ROOT)}")
+    return 0
+
+
+def load_json(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        fail(f"Missing output JSON: {path.relative_to(ROOT)}")
+    except json.JSONDecodeError as exc:
+        fail(f"Invalid JSON in {path.relative_to(ROOT)}: {exc}")
+
+
+def validate_contract(contract: AgentContract, data: Any) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    if not isinstance(data, dict):
+        return ["Output JSON must be an object."], warnings
+
+    for field in contract.required_fields:
+        if field not in data:
+            errors.append(f"Missing required field: {field}")
+
+    if data.get("schema_version") != contract.schema_version:
+        errors.append(f"schema_version must be {contract.schema_version!r}")
+
+    if data.get("runtime_llm_used") is True:
+        warnings.append("runtime_llm_used=true; verify CEO approval and client billing before delivery.")
+
+    if contract.name == "eval-agent":
+        if data.get("runtime_llm_needed") is True and not data.get("runtime_llm_cost_estimate_eur_month"):
+            errors.append("runtime_llm_needed=true requires runtime_llm_cost_estimate_eur_month > 0")
+        complexity = data.get("complexity_score")
+        if isinstance(complexity, int) and complexity == 5 and data.get("recommendation") == "APPROVE":
+            warnings.append("Complexity 5 with APPROVE requires explicit CEO review.")
+
+    if contract.name == "qa-agent":
+        score = data.get("qa_score")
+        status = data.get("status")
+        coverage = data.get("sow_coverage", {})
+        percentage = coverage.get("percentage") if isinstance(coverage, dict) else None
+        if not isinstance(score, (int, float)) or score < 7:
+            errors.append("qa_score must be >= 7 for delivery.")
+        if status not in {"APPROVED", "APPROVED_WITH_NOTES"}:
+            errors.append("status must be APPROVED or APPROVED_WITH_NOTES for delivery.")
+        if percentage != 100:
+            errors.append("sow_coverage.percentage must be 100 for delivery.")
+
+    return errors, warnings
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    contract = contract_for(args.agent)
+    path = Path(args.file).resolve() if args.file else output_json_path(args.project_id, contract)
+    data = load_json(path)
+    errors, warnings = validate_contract(contract, data)
+
+    report = {
+        "schema_version": "agency-validation.v1",
+        "project_id": args.project_id,
+        "agent": contract.name,
+        "validated_file": str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path),
+        "status": "PASS" if not errors else "FAIL",
+        "errors": errors,
+        "warnings": warnings,
+        "validated_at": now_iso(),
+    }
+    report_path = output_dir(args.project_id, contract.name) / "validation-report.json"
+    write_json(report_path, report)
+    log_event(args.project_id, {"event": "validated", "agent": contract.name, "status": report["status"]})
+
+    print(f"{report['status']}: {contract.name} output validation")
+    if errors:
+        print("Errors:")
+        for error in errors:
+            print(f"- {error}")
+    if warnings:
+        print("Warnings:")
+        for warning in warnings:
+            print(f"- {warning}")
+    print(f"Report: {report_path.relative_to(ROOT)}")
+    return 0 if not errors else 1
+
+
+def status_for(project_id: str, contract: AgentContract) -> tuple[str, str]:
+    json_path = output_json_path(project_id, contract)
+    report_path = output_dir(project_id, contract.name) / "validation-report.json"
+    if report_path.is_file():
+        try:
+            status = json.loads(report_path.read_text(encoding="utf-8")).get("status", "UNKNOWN")
+            return str(status), str(json_path.relative_to(ROOT))
+        except json.JSONDecodeError:
+            return "BAD_REPORT", str(report_path.relative_to(ROOT))
+    if json_path.is_file():
+        return "OUTPUT_READY", str(json_path.relative_to(ROOT))
+    state_path = output_dir(project_id, contract.name) / ".runner-state.json"
+    if state_path.is_file():
+        return "PREPARED", str(json_path.relative_to(ROOT))
+    return "PENDING", str(json_path.relative_to(ROOT))
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    project_path = project_dir(args.project_id)
+    project_md = read_text(project_path / "PROJECT.md")
+    active = parse_active_agents(project_md)
+    active_set = set(active)
+    print(f"Project: {args.project_id}")
+    print(f"Active agents: {', '.join(active) if active else 'none marked active'}")
+    print("")
+    print(f"{'Agent':22} {'Active':7} {'Status':14} Output")
+    print("-" * 82)
+    for name in sorted(AGENTS):
+        contract = AGENTS[name]
+        status, target = status_for(args.project_id, contract)
+        marker = "yes" if name in active_set else "no"
+        print(f"{name:22} {marker:7} {status:14} {target}")
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="agency",
+        description="Zero-API execution runner for AI Agency projects.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    list_agents = sub.add_parser("list-agents", help="List known agent contracts.")
+    list_agents.set_defaults(func=cmd_list_agents)
+
+    prepare = sub.add_parser("prepare", help="Prepare a prompt packet for an agent run.")
+    prepare.add_argument("agent", choices=sorted(AGENTS))
+    prepare.add_argument("project_id")
+    prepare.set_defaults(func=cmd_prepare)
+
+    run = sub.add_parser("run", help="Alias for prepare; does not call an LLM.")
+    run.add_argument("agent", choices=sorted(AGENTS))
+    run.add_argument("project_id")
+    run.set_defaults(func=cmd_prepare)
+
+    validate = sub.add_parser("validate", help="Validate an agent output JSON file.")
+    validate.add_argument("agent", choices=sorted(AGENTS))
+    validate.add_argument("project_id")
+    validate.add_argument("--file", help="Optional explicit JSON file path.")
+    validate.set_defaults(func=cmd_validate)
+
+    status = sub.add_parser("status", help="Show project agent output status.")
+    status.add_argument("project_id")
+    status.set_defaults(func=cmd_status)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

@@ -3,7 +3,8 @@
 ## Săptămâna 1-2: Fundația MVP Zero API
 - [x] Aliniere arhitectură: Codex/Claude Code ca operatori, nu API runtime intern
 - [x] Execuția tehnică este separată în `backend-agent` + `frontend-agent` + `qa-agent`
-- [ ] Inițializare Git + GitHub pentru versionare
+- [x] Inițializare Git + GitHub pentru versionare
+- [x] Execution Runner v0 pentru prompt packets și validare JSON
 - [ ] Creare cont Supabase și rulare schema DB
 - [ ] Creare cont n8n Cloud și primul webhook de test
 - [ ] Configurare dashboard minim sau flux local pe `projects/template`

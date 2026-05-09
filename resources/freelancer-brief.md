@@ -13,6 +13,7 @@ Freelancerul NU construiește un runtime care apelează Anthropic/OpenAI. Constr
 ### 1. Backend - Utilitare I/O și API Intern
 - API pentru proiecte, clienți, agent runs și documente
 - Scripturi Python/TypeScript care citesc/scriu în Supabase
+- Integrare cu `execution/agency.py` pentru prompt packets și validare JSON
 - Zero import `anthropic`, `openai` sau SDK LLM în MVP
 - Dacă un pas are nevoie de LLM, scriptul scrie promptul în `.tmp/` sau `agent_runs.input`, apoi operatorul Codex/Claude Code îl execută
 - Logging complet în `agent_runs`
@@ -80,4 +81,3 @@ Interzis în MVP:
 ## Timeline & Budget
 - Timeline: 2-3 săptămâni
 - Budget orientativ: 1.500-2.500€
-

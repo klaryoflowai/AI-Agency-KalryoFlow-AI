@@ -84,9 +84,12 @@ OUTPUT FORMAT:
 |----------|-------------|----------|
 | Workflow automation | 5-15 ore | 60€ |
 | API integration | 10-20 ore | 60€ |
-| Custom AI agent | 15-30 ore | 80€ |
+| Custom AI agent design | 8-20 ore | 70€ |
+| Backend implementation | 15-40 ore | 70€ |
+| Frontend implementation | 15-35 ore | 60€ |
 | Dashboard/UI | 10-25 ore | 60€ |
 | Database setup | 5-10 ore | 60€ |
+| QA delivery | 6-16 ore | 55€ |
 | Training & handover | 3-8 ore | 50€ |
 
 ---
