@@ -27,9 +27,9 @@ PIPELINE_ORDER = (
     "backend-agent",
     "frontend-agent",
     "ops-agent",
-    "qa-agent",
     "marketing-agent",
     "client-success-agent",
+    "qa-agent",
 )
 
 

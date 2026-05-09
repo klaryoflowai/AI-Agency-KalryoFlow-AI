@@ -1,0 +1,42 @@
+{
+  "schema_version": "eval-agent.v1",
+  "feasibility": "HIGH",
+  "complexity_score": 3,
+  "estimated_hours": 48,
+  "estimated_cost_eur": 3360,
+  "timeline_weeks": 4,
+  "risks": [
+    {
+      "risk": "WhatsApp Business may not provide practical API access for MVP",
+      "mitigation": "Start with manual capture into Google Sheets and design WhatsApp ingestion as phase 2."
+    },
+    {
+      "risk": "Inventory data may be incomplete or inconsistent",
+      "mitigation": "Create a cleaned product catalog and minimum-stock thresholds before automation."
+    },
+    {
+      "risk": "Peak-hour order volume can expose edge cases",
+      "mitigation": "Run parallel manual verification for the first 7 days after delivery."
+    }
+  ],
+  "agents_needed": [
+    "bd-agent",
+    "backend-agent",
+    "frontend-agent",
+    "ops-agent",
+    "qa-agent",
+    "marketing-agent",
+    "client-success-agent"
+  ],
+  "runtime_llm_needed": false,
+  "runtime_llm_cost_estimate_eur_month": 0,
+  "clarifying_questions": [
+    "Can the WordPress order form export every new order into email or Google Sheets?",
+    "Who owns the source of truth for product stock and minimum-stock thresholds?",
+    "Should confirmations be sent by Gmail only in MVP, or should WhatsApp confirmations wait for phase 2?",
+    "What is the accepted fallback when stock is missing or product names do not match the catalog?"
+  ],
+  "sow_draft": "Build a zero-LLM-runtime MVP that centralizes restaurant orders in Google Sheets, validates product availability against a stock sheet, flags low-stock items, prepares confirmation messages, and generates a daily sales and replenishment report. Phase 1 excludes autonomous WhatsApp sending and supplier payments.",
+  "recommendation": "APPROVE",
+  "notes": "Project fits the MVP budget and timeline if scope stays deterministic and WhatsApp automation is treated as a later phase."
+}

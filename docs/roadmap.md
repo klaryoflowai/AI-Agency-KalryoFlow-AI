@@ -13,10 +13,10 @@
 - [ ] Configurare dashboard minim sau flux local pe `projects/template`
 
 ## Săptămâna 3-4: Primii Agenți Operaționali
-- [ ] Eval Agent funcțional ca workflow manual/semi-manual
-- [ ] BD Agent funcțional pentru propuneri aprobate de CEO
-- [ ] Backend Agent + Frontend Agent rulați pe proiect fictiv
-- [ ] QA Agent validează output-urile înainte de livrare
+- [x] Eval Agent funcțional ca workflow manual/semi-manual
+- [x] BD Agent funcțional pentru propuneri aprobate de CEO
+- [x] Backend Agent + Frontend Agent rulați pe proiect fictiv
+- [x] QA Agent validează output-urile înainte de livrare
 - [ ] Date salvate corect în Supabase și în folderul proiectului
 
 ## Luna 2: Dashboard + Orchestrare

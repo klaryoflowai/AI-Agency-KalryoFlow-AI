@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "bd-agent",
+  "status": "prepared",
+  "recommended_operator": "Codex or Claude Code; CEO approves before send",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T133806Z_bd-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/bd-agent/proposal.json",
+  "prepared_at": "2026-05-09T13:38:06+00:00"
+}

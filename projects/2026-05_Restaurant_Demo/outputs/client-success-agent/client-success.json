@@ -1,0 +1,28 @@
+{
+  "schema_version": "client-success-agent.v2",
+  "communication_type": "checkin_7d",
+  "client_id": "demo-client-restaurant",
+  "project_id": "2026-05_Restaurant_Demo",
+  "health_score": 8,
+  "health_score_breakdown": {
+    "technical": 4,
+    "satisfaction": 2,
+    "engagement": 1,
+    "business_fit": 1
+  },
+  "churn_risk": "low",
+  "churn_signals": [],
+  "content": "Buna, vrem sa verificam dupa prima saptamana daca fluxul de comenzi si stoc va ajuta asa cum ne-am propus. Va rugam sa confirmati: 1) comenzile apar corect in tabelul central, 2) alertele low-stock sunt utile, 3) raportul zilnic are informatiile de care aveti nevoie. Daca ceva nu este clar, propunem un call de 15 minute pentru ajustari rapide.",
+  "upsell_opportunities": [
+    {
+      "trigger": "new_pain_point",
+      "proposed_service": "Phase 2 WhatsApp ingestion and supplier reorder recommendation",
+      "estimated_value_eur": 1200
+    }
+  ],
+  "escalation_required": false,
+  "escalation_reason": "",
+  "action_required_from_ceo": "Aproba mesajul de check-in dupa livrare si decide daca mentioneaza faza 2.",
+  "next_touchpoint_days": 23,
+  "notes": "Health score este estimativ pentru pilot. In proiect real se recalculeaza dupa datele din primele 7 zile."
+}

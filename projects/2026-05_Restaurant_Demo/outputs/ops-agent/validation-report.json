@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-validation.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "ops-agent",
+  "validated_file": "projects/2026-05_Restaurant_Demo/outputs/ops-agent/workflow-design.json",
+  "status": "PASS",
+  "errors": [],
+  "warnings": [],
+  "validated_at": "2026-05-09T13:39:34+00:00"
+}

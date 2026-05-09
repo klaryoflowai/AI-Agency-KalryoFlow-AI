@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "client-success-agent",
+  "status": "prepared",
+  "recommended_operator": "Claude Code or Codex; CEO approves before send",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T134021Z_client-success-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/client-success-agent/client-success.json",
+  "prepared_at": "2026-05-09T13:40:21+00:00"
+}

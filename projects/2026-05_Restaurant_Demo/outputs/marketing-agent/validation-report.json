@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-validation.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "marketing-agent",
+  "validated_file": "projects/2026-05_Restaurant_Demo/outputs/marketing-agent/content.json",
+  "status": "PASS",
+  "errors": [],
+  "warnings": [],
+  "validated_at": "2026-05-09T13:40:16+00:00"
+}

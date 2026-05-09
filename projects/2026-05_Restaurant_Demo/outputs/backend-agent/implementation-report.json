@@ -1,0 +1,66 @@
+{
+  "schema_version": "backend-agent.v1",
+  "task_completed": "Designed zero-API backend MVP for order intake, stock validation, confirmation drafts and daily reporting.",
+  "files": [
+    {
+      "path": "client-app/scripts/import_orders.py",
+      "status": "planned",
+      "purpose": "Normalize WordPress/email/manual order rows into the central orders sheet."
+    },
+    {
+      "path": "client-app/scripts/validate_stock.py",
+      "status": "planned",
+      "purpose": "Match order items against catalog and stock thresholds."
+    },
+    {
+      "path": "client-app/scripts/daily_report.py",
+      "status": "planned",
+      "purpose": "Generate daily sales, exception and low-stock summary."
+    }
+  ],
+  "endpoints": [
+    {
+      "name": "order_intake_webhook",
+      "method": "POST",
+      "path": "/webhooks/orders",
+      "status": "planned",
+      "notes": "Optional phase 1 endpoint if WordPress can POST order data."
+    },
+    {
+      "name": "daily_report_job",
+      "method": "CRON",
+      "path": "daily 22:30",
+      "status": "planned",
+      "notes": "Can be implemented in n8n or server-side cron later."
+    }
+  ],
+  "env_vars_needed": [
+    "GOOGLE_SHEETS_SPREADSHEET_ID",
+    "GOOGLE_SERVICE_ACCOUNT_JSON",
+    "GMAIL_SENDER_EMAIL"
+  ],
+  "dependencies": [
+    "google-api-python-client",
+    "google-auth"
+  ],
+  "runtime_llm_used": false,
+  "setup_instructions": [
+    "Create order, catalog, stock, exceptions and reports sheets.",
+    "Import product catalog and minimum-stock thresholds.",
+    "Run stock validation on sample orders before enabling live workflow.",
+    "Keep WhatsApp ingestion manual in phase 1."
+  ],
+  "handoff_to_frontend": {
+    "operator_view_required": true,
+    "pages": [
+      "Orders queue",
+      "Stock exceptions",
+      "Daily report"
+    ],
+    "data_contract": {
+      "order_status": ["new", "confirmed", "needs_review", "out_of_stock"],
+      "stock_status": ["ok", "low", "missing"]
+    }
+  },
+  "notes": "No paid LLM runtime and no autonomous payments. Supplier reorder recommendations are informational only."
+}

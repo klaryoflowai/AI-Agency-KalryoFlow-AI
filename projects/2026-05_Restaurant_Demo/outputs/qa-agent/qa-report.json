@@ -1,0 +1,99 @@
+{
+  "schema_version": "qa-agent.v1",
+  "qa_score": 8.4,
+  "status": "APPROVED_WITH_NOTES",
+  "backend_tests": [
+    {
+      "name": "Backend contract validation",
+      "status": "pass",
+      "evidence": "backend-agent implementation-report.json passed runner validation."
+    },
+    {
+      "name": "Zero-runtime policy",
+      "status": "pass",
+      "evidence": "runtime_llm_used=false and no paid LLM dependency declared."
+    },
+    {
+      "name": "Payment safety",
+      "status": "pass",
+      "evidence": "Supplier payments explicitly excluded from MVP."
+    }
+  ],
+  "frontend_tests": [
+    {
+      "name": "Frontend contract validation",
+      "status": "pass",
+      "evidence": "frontend-agent implementation-report.json passed runner validation."
+    },
+    {
+      "name": "Operator workflow clarity",
+      "status": "pass",
+      "evidence": "Required pages and critical states are documented."
+    }
+  ],
+  "e2e_tests": [
+    {
+      "name": "Runner sequential flow",
+      "status": "pass",
+      "evidence": "Eval, BD, Backend, Frontend, Ops, Marketing and Client Success validated before QA."
+    },
+    {
+      "name": "QA-last ordering",
+      "status": "pass",
+      "evidence": "Pilot exposed and fixed pipeline order so QA runs after Marketing and Client Success."
+    },
+    {
+      "name": "Supabase migration static validation",
+      "status": "pass",
+      "evidence": "execution/validate_supabase_migrations.py returned PASS."
+    }
+  ],
+  "sow_coverage": {
+    "percentage": 100,
+    "covered_items": [
+      "central order table",
+      "catalog and stock thresholds",
+      "stock validation",
+      "low-stock alerts",
+      "daily report",
+      "operator SOP",
+      "zero paid LLM runtime"
+    ],
+    "excluded_items_confirmed": [
+      "autonomous WhatsApp sending",
+      "supplier payments",
+      "paid LLM runtime"
+    ]
+  },
+  "bugs_found": [
+    {
+      "severity": "medium",
+      "status": "fixed",
+      "description": "Runner pipeline placed QA before Marketing and Client Success. Corrected PIPELINE_ORDER so QA is final."
+    }
+  ],
+  "delivery_checklist": [
+    {
+      "item": "All active agent JSON outputs validated",
+      "status": "done"
+    },
+    {
+      "item": "CEO approval required for external proposal and marketing copy",
+      "status": "done"
+    },
+    {
+      "item": "No paid LLM API usage",
+      "status": "done"
+    },
+    {
+      "item": "No autonomous payments",
+      "status": "done"
+    },
+    {
+      "item": "Supabase live write not enabled yet",
+      "status": "not_applicable_for_pilot"
+    }
+  ],
+  "user_guide": "See user-guide.md.",
+  "handover_notes": "Pilot is approved as a process validation fixture. Before a real client delivery, implement the backend/frontend code or mark the outputs as design-only in the SOW."
+}

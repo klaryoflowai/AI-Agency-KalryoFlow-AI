@@ -1,0 +1,65 @@
+{
+  "schema_version": "frontend-agent.v1",
+  "task_completed": "Designed operator-facing dashboard MVP for restaurant order review, stock exceptions and daily reporting.",
+  "files": [
+    {
+      "path": "client-app/app/orders/page.tsx",
+      "status": "planned",
+      "purpose": "Order queue with status filters and confirmation draft preview."
+    },
+    {
+      "path": "client-app/app/stock/page.tsx",
+      "status": "planned",
+      "purpose": "Low-stock and missing-stock exception view."
+    },
+    {
+      "path": "client-app/app/reports/daily/page.tsx",
+      "status": "planned",
+      "purpose": "Daily sales and replenishment report."
+    }
+  ],
+  "pages": [
+    {
+      "name": "Orders Queue",
+      "route": "/orders",
+      "states": ["new", "needs_review", "out_of_stock", "confirmed"]
+    },
+    {
+      "name": "Stock Exceptions",
+      "route": "/stock",
+      "states": ["low", "missing", "resolved"]
+    },
+    {
+      "name": "Daily Report",
+      "route": "/reports/daily",
+      "states": ["empty", "ready", "exported"]
+    }
+  ],
+  "env_vars_needed": [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  ],
+  "dependencies": [
+    "next",
+    "react",
+    "tailwindcss",
+    "shadcn/ui"
+  ],
+  "runtime_llm_used": false,
+  "setup_instructions": [
+    "Keep UI dense and operational, not marketing-like.",
+    "Use status badges for order and stock state.",
+    "Expose confirmation text as draft only; operator confirms sending.",
+    "Keep mobile layout usable for manager checks."
+  ],
+  "handoff_to_qa": {
+    "critical_flows": [
+      "Filter orders needing review",
+      "Open order details",
+      "Read low-stock alert",
+      "Review daily report"
+    ],
+    "screenshots_required": ["desktop", "mobile"]
+  },
+  "notes": "No UI action should trigger autonomous supplier payments or paid LLM calls."
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-validation.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "frontend-agent",
+  "validated_file": "projects/2026-05_Restaurant_Demo/outputs/frontend-agent/implementation-report.json",
+  "status": "PASS",
+  "errors": [],
+  "warnings": [],
+  "validated_at": "2026-05-09T13:39:07+00:00"
+}

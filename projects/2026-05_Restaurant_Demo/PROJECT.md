@@ -3,7 +3,7 @@
 ## Metadata
 - **project_id:** 2026-05_Restaurant_Demo
 - **client_id:** [uuid din Supabase — completat după creare]
-- **status:** draft
+- **status:** pilot-ready
 - **created:** 2026-05-09
 - **deadline:** 2026-06-05
 
@@ -69,14 +69,14 @@ complexitate: 0           # 1-5, completat de eval-agent
 
 | Agent | Fișier Output | Status |
 |-------|--------------|--------|
-| eval-agent | evaluation.json, sow.md | ⏳ pending |
-| bd-agent | proposal.md | ⏳ pending |
-| backend-agent | implementation-report.json, README.md | ⏳ pending |
-| frontend-agent | implementation-report.json, README.md | ⏳ pending |
-| ops-agent | sop.md, workflow-design.json | ⏳ pending |
-| qa-agent | qa-report.json, user-guide.md | ⏳ pending |
-| marketing-agent | content.json | ⏳ pending |
-| client-success-agent | client-success.json | ⏳ pending |
+| eval-agent | evaluation.json, sow.md | PASS |
+| bd-agent | proposal.md | PASS |
+| backend-agent | implementation-report.json, README.md | PASS |
+| frontend-agent | implementation-report.json, README.md | PASS |
+| ops-agent | sop.md, workflow-design.json | PASS |
+| marketing-agent | content.json | PASS |
+| client-success-agent | client-success.json | PASS |
+| qa-agent | qa-report.json, user-guide.md | PASS |
 
 ---
 
@@ -85,14 +85,22 @@ complexitate: 0           # 1-5, completat de eval-agent
 | Data | Agent | Status | Note |
 |------|-------|--------|------|
 | 2026-05-09 | proiect | created | Pilot fictiv pentru validarea fluxului end-to-end zero-API |
+| 2026-05-09 | eval-agent | PASS | Evaluare, cost si SOW validate |
+| 2026-05-09 | bd-agent | PASS | Propunere comerciala draft validata |
+| 2026-05-09 | backend-agent | PASS | Design backend zero-runtime validat |
+| 2026-05-09 | frontend-agent | PASS | Design UI operator validat |
+| 2026-05-09 | ops-agent | PASS | Workflow si SOP validate |
+| 2026-05-09 | marketing-agent | PASS | Draft case study anonimizat validat |
+| 2026-05-09 | client-success-agent | PASS | Check-in 7 zile validat |
+| 2026-05-09 | qa-agent | PASS | QA score 8.4, status APPROVED_WITH_NOTES |
 
 ---
 
 ## Delivery Checklist
 - [ ] Propunere comercială aprobată de client
 - [ ] Avans încasat
-- [ ] Toate output-urile din `outputs/` validate de QA Agent
-- [ ] Documentație client copiată în `delivery/`
+- [x] Toate output-urile din `outputs/` validate de QA Agent
+- [x] Documentație client copiată în `delivery/`
 - [ ] Prezentare finală făcută
 - [ ] Sold încasat
-- [ ] Client Success Agent activat (follow-up 7/30/90 zile)
+- [x] Client Success Agent activat (follow-up 7/30/90 zile)

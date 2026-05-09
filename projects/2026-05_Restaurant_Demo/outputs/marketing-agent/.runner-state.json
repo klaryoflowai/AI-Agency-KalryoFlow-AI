@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "marketing-agent",
+  "status": "prepared",
+  "recommended_operator": "Claude Code or Codex; CEO approves before publish",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T133957Z_marketing-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/marketing-agent/content.json",
+  "prepared_at": "2026-05-09T13:39:57+00:00"
+}

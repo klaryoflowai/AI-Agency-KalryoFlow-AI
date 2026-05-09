@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-validation.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "client-success-agent",
+  "validated_file": "projects/2026-05_Restaurant_Demo/outputs/client-success-agent/client-success.json",
+  "status": "PASS",
+  "errors": [],
+  "warnings": [],
+  "validated_at": "2026-05-09T13:40:35+00:00"
+}

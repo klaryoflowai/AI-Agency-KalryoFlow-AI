@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-validation.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "qa-agent",
+  "validated_file": "projects/2026-05_Restaurant_Demo/outputs/qa-agent/qa-report.json",
+  "status": "PASS",
+  "errors": [],
+  "warnings": [],
+  "validated_at": "2026-05-09T13:41:03+00:00"
+}

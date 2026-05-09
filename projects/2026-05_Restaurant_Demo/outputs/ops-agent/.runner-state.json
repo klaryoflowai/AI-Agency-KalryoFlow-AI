@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "ops-agent",
+  "status": "prepared",
+  "recommended_operator": "Codex or Claude Code",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T133911Z_ops-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/ops-agent/workflow-design.json",
+  "prepared_at": "2026-05-09T13:39:11+00:00"
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "eval-agent",
+  "status": "prepared",
+  "recommended_operator": "Codex or Claude Code; CEO approval required",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T133738Z_eval-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/eval-agent/evaluation.json",
+  "prepared_at": "2026-05-09T13:37:38+00:00"
+}

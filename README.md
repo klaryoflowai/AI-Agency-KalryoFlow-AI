@@ -59,9 +59,9 @@ ai-agency/
 - [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
 - [x] Workflow-to-Skill Factory + Client Context Pack
+- [x] Primul proiect pilot rulat end-to-end cu QA PASS
 - [ ] Infrastructură configurată
 - [ ] Dashboard UI
-- [ ] Primul proiect pilot
 
 ---
 

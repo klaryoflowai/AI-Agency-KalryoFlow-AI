@@ -1,0 +1,63 @@
+{
+  "schema_version": "ops-agent.v1",
+  "process_map": [
+    "Order arrives from WordPress, phone or WhatsApp.",
+    "Operator records or confirms order row in central sheet.",
+    "Automation validates products against catalog and stock.",
+    "If stock is OK, confirmation draft is prepared.",
+    "If stock is low or missing, order is marked needs_review.",
+    "At day end, report summarizes sales, exceptions and replenishment needs."
+  ],
+  "automation_opportunities": [
+    {
+      "name": "Stock validation",
+      "priority": "high",
+      "impact": "Reduces wrong confirmations and out-of-stock sales."
+    },
+    {
+      "name": "Daily report",
+      "priority": "high",
+      "impact": "Removes manual end-of-day reconciliation."
+    },
+    {
+      "name": "WhatsApp ingestion",
+      "priority": "medium",
+      "impact": "Useful later, but not required for phase 1."
+    }
+  ],
+  "recommended_automations": [
+    "Google Sheets trigger for new/updated order rows",
+    "Catalog match and stock threshold check",
+    "Gmail-ready confirmation draft generation",
+    "Daily report scheduled at closing time"
+  ],
+  "workflow_design": {
+    "phase_1": "Semi-automated deterministic workflow with operator approval for confirmations.",
+    "fallback": "If automation fails, operator continues using the central sheet and marks exceptions manually.",
+    "human_approval_points": [
+      "Out-of-stock order",
+      "Unknown product",
+      "Customer address/contact missing",
+      "Supplier reorder decision"
+    ]
+  },
+  "n8n_workflow_json": {
+    "name": "restaurant-demo-order-stock-mvp",
+    "nodes": [
+      "Google Sheets Trigger: New/Updated Order",
+      "Function: Normalize Order Items",
+      "Google Sheets Lookup: Catalog and Stock",
+      "IF: Stock OK",
+      "Gmail Draft: Confirmation",
+      "Google Sheets Append: Exception",
+      "Cron: Daily Report"
+    ],
+    "status": "design_only"
+  },
+  "sop_document": "See sop.md for operator steps, exception handling and daily close process.",
+  "training_notes": [
+    "Train operator to review needs_review before sending confirmations.",
+    "Train manager to update stock thresholds weekly.",
+    "Run manual parallel check for first 7 days."
+  ]
+}

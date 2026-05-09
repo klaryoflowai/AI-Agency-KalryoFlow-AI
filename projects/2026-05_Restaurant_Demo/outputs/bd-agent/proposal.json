@@ -1,0 +1,21 @@
+{
+  "schema_version": "bd-agent.v2",
+  "document_type": "proposal",
+  "lead_qualification": {
+    "budget_signal": "green",
+    "authority_signal": "green",
+    "need_signal": "green",
+    "timeline_signal": "green",
+    "decision_process_signal": "yellow",
+    "fit_signal": "green",
+    "recommendation": "MOVE_FORWARD"
+  },
+  "subject": "Propunere Restaurant Demo — automatizare comenzi si stoc",
+  "content": "Propunem un MVP de 4 saptamani care centralizeaza comenzile in Google Sheets, verifica stocul, pregateste confirmarile si genereaza raport zilnic. Investitie setup: 3360 EUR, conform Eval Agent output. Runtime LLM: 0 EUR/luna in MVP. WhatsApp automation si platile catre furnizori raman in afara scopului initial.",
+  "cta": "CEO sa aprobe propunerea, apoi clientul confirma SOW-ul si achita avansul de 50%.",
+  "pricing_source": "eval-agent output project_id 2026-05_Restaurant_Demo",
+  "discount_applied": false,
+  "ceo_approval_required": true,
+  "next_followup_days": 3,
+  "notes": "Lead-ul este potrivit pentru MVP. Bugetul clientului acopera estimarea. Recomandare: propunere in faze, cu WhatsApp automation ca phase 2."
+}

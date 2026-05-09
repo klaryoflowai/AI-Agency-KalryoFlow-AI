@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "qa-agent",
+  "status": "prepared",
+  "recommended_operator": "Independent QA operator",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T134043Z_qa-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/qa-agent/qa-report.json",
+  "prepared_at": "2026-05-09T13:40:43+00:00"
+}

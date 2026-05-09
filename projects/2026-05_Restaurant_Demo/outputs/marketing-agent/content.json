@@ -1,0 +1,28 @@
+{
+  "schema_version": "marketing-agent.v2",
+  "content_type": "case_study",
+  "pillar": "dovezi",
+  "title": "Cum un restaurant local poate reduce erorile de comanda cu un workflow zero-API",
+  "meta_description": "Studiu de caz anonim despre automatizarea comenzilor si stocului pentru un restaurant local.",
+  "target_keyword": "automatizare comenzi restaurant",
+  "target_audience": "proprietari si manageri de restaurante mici cu livrare proprie",
+  "content": "Un restaurant local primea comenzi din telefon, site si WhatsApp, apoi le copia manual intr-un Google Sheet. La orele de varf apareau erori, produse vandute fara stoc si raportare greoaie la final de zi. Solutia propusa este un MVP determinist: tabel central de comenzi, catalog produse, validare stoc, alerte low-stock, confirmari draft si raport zilnic. In faza 1 nu exista runtime LLM platit, nu exista plati autonome si operatorul aproba comunicarile critice. Obiectivul de business este reducerea erorilor cu minimum 50% si economisirea a minimum 10 ore lunar.",
+  "cta": "Vrei sa vezi ce procese din restaurantul tau pot fi automatizate fara runtime AI platit? Cere o evaluare.",
+  "distribution_channels": [
+    "LinkedIn",
+    "Blog"
+  ],
+  "estimated_reach": "500-1000 impresii LinkedIn pentru postul scurt; blog folosit ca material de vanzare.",
+  "metrics_to_track": [
+    "engagement_rate",
+    "qualified_comments",
+    "demo_requests"
+  ],
+  "data_sources_used": [
+    "2026-05_Restaurant_Demo PROJECT.md",
+    "2026-05_Restaurant_Demo eval-agent evaluation.json"
+  ],
+  "anonymization_confirmed": true,
+  "approval_required": true,
+  "notes": "Draft demonstrativ, nu publicabil ca studiu real fara client real si cifre confirmate post-livrare."
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "agency-runner.v1",
+  "project_id": "2026-05_Restaurant_Demo",
+  "agent": "backend-agent",
+  "status": "prepared",
+  "recommended_operator": "Codex",
+  "prompt_packet": ".tmp/agency/2026-05_Restaurant_Demo/20260509T133830Z_backend-agent_prompt.md",
+  "output_json": "projects/2026-05_Restaurant_Demo/outputs/backend-agent/implementation-report.json",
+  "prepared_at": "2026-05-09T13:38:30+00:00"
+}

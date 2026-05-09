@@ -79,3 +79,29 @@ def test_next_action_blocks_delivery_without_qa(monkeypatch, tmp_path: Path) -> 
     assert action.kind == "qa_not_active"
     assert action.status == "BLOCKED"
     assert action.agent == "qa-agent"
+
+
+def test_next_action_runs_qa_after_business_agents(monkeypatch, tmp_path: Path) -> None:
+    patch_runner_paths(monkeypatch, tmp_path)
+    write_project(
+        tmp_path,
+        "demo",
+        [
+            "- [x] eval-agent           -> `outputs/eval-agent/`",
+            "- [x] marketing-agent      -> `outputs/marketing-agent/`",
+            "- [x] client-success-agent -> `outputs/client-success-agent/`",
+            "- [x] qa-agent             -> `outputs/qa-agent/`",
+        ],
+    )
+    for agent_name in ("eval-agent", "marketing-agent"):
+        output_dir = tmp_path / "projects" / "demo" / "outputs" / agent_name
+        output_dir.mkdir(parents=True)
+        output_dir.joinpath("validation-report.json").write_text(
+            json.dumps({"status": "PASS"}),
+            encoding="utf-8",
+        )
+
+    action = agency.next_action("demo")
+
+    assert action.kind == "prepare_agent"
+    assert action.agent == "client-success-agent"
