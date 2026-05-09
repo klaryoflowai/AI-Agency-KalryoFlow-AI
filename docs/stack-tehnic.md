@@ -19,6 +19,7 @@ Această alegere reduce costul, păstrează controlul uman și permite validarea
 | UI kit | Tailwind + shadcn/ui | Componente B2B rapide și coerente |
 | QA | Playwright + pytest + Vitest | Verificare reală înainte de livrare |
 | Runner MVP | `execution/agency.py` | Prompt packets, output folders, JSON validation |
+| DB Validation | `execution/validate_supabase_migrations.py` | Verificare migrații, RLS și drift zero-API |
 | Versionare | Git + GitHub | Audit, rollback, colaborare |
 
 ---

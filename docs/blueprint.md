@@ -105,6 +105,7 @@ Schema completă se află în `infrastructure/supabase/SETUP.md`. Entitățile p
 clients
 projects
 agent_runs
+agent_run_events
 documents
 pricing_matrix
 runtime_llm_usage -- doar pentru faza cu API client-side

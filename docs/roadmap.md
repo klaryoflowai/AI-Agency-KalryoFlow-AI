@@ -4,7 +4,8 @@
 - [x] Aliniere arhitectură: Codex/Claude Code ca operatori, nu API runtime intern
 - [x] Execuția tehnică este separată în `backend-agent` + `frontend-agent` + `qa-agent`
 - [x] Inițializare Git + GitHub pentru versionare
-- [x] Execution Runner v0 pentru prompt packets și validare JSON
+- [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
+- [x] Migrare Supabase initiala pregatita local + validator fara conectare live
 - [ ] Creare cont Supabase și rulare schema DB
 - [ ] Creare cont n8n Cloud și primul webhook de test
 - [ ] Configurare dashboard minim sau flux local pe `projects/template`

@@ -42,6 +42,18 @@ Vezi statusul proiectului:
 python3 execution/agency.py status YYYY-MM_Client
 ```
 
+Vezi următorul pas sigur pentru proiect:
+
+```bash
+python3 execution/agency.py next YYYY-MM_Client
+```
+
+Valideaza migrarea Supabase fara conectare live:
+
+```bash
+python3 execution/validate_supabase_migrations.py
+```
+
 ## Ownership Implicit
 
 - `backend-agent` → Codex
@@ -55,6 +67,7 @@ Runner-ul verifică:
 - câmpuri obligatorii per agent;
 - reguli speciale pentru Eval Agent și QA Agent;
 - QA delivery gate: `qa_score >= 7`, status aprobat, SOW coverage 100%.
+- Next-action gate: QA nu poate porni până când agenții anteriori activi nu au validare `PASS`.
 
 ## Ce Nu Face
 
@@ -62,4 +75,4 @@ Runner-ul verifică:
 - Nu trimite emailuri.
 - Nu publică conținut.
 - Nu scrie în Supabase încă; logul MVP este local în `.tmp/agency/`.
-
+- Nu aplică migrații Supabase live; verificarea DB este locală până avem aprobare.

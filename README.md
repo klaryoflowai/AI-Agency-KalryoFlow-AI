@@ -54,8 +54,9 @@ ai-agency/
 - [x] Structură foldere creată
 - [x] Prompt-uri și contracte agenți scrise
 - [x] Schema Supabase documentată
+- [x] Migrații Supabase pregătite local + validator RLS
 - [x] Strategie MVP zero API definită
-- [x] Execution Runner v0 pentru prompt packets și validare JSON
+- [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
 - [ ] Infrastructură configurată
 - [ ] Dashboard UI
 - [ ] Primul proiect pilot

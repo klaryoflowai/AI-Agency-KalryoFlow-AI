@@ -20,6 +20,17 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 PROJECTS_DIR = ROOT / "projects"
 TMP_RUNS_DIR = ROOT / ".tmp" / "agency"
+PIPELINE_ORDER = (
+    "orchestrator",
+    "eval-agent",
+    "bd-agent",
+    "backend-agent",
+    "frontend-agent",
+    "ops-agent",
+    "qa-agent",
+    "marketing-agent",
+    "client-success-agent",
+)
 
 
 @dataclass(frozen=True)
@@ -30,6 +41,15 @@ class AgentContract:
     owner: str
     required_fields: tuple[str, ...]
     extra_outputs: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class NextAction:
+    kind: str
+    agent: str | None
+    status: str
+    message: str
+    command: str | None = None
 
 
 AGENTS: dict[str, AgentContract] = {
@@ -487,6 +507,115 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def ordered_active_agents(project_md: str) -> list[str]:
+    active = parse_active_agents(project_md)
+    active_set = set(active)
+    ordered = [name for name in PIPELINE_ORDER if name in active_set]
+    extras = [name for name in active if name not in PIPELINE_ORDER]
+    return ordered + extras
+
+
+def next_action(project_id: str) -> NextAction:
+    project_path = project_dir(project_id)
+    project_md = read_text(project_path / "PROJECT.md")
+    active = ordered_active_agents(project_md)
+
+    if not active:
+        return NextAction(
+            kind="no_active_agents",
+            agent=None,
+            status="BLOCKED",
+            message="No active agents are checked in PROJECT.md.",
+        )
+
+    qa_active = "qa-agent" in active
+    qa_index = active.index("qa-agent") if qa_active else len(active)
+    agents_before_qa = active[:qa_index]
+    blocked_before_qa: list[tuple[str, str]] = []
+
+    for agent_name in active:
+        contract = contract_for(agent_name)
+        status, target = status_for(project_id, contract)
+
+        if agent_name == "qa-agent" and blocked_before_qa:
+            waiting_on = ", ".join(f"{name}={state}" for name, state in blocked_before_qa)
+            return NextAction(
+                kind="qa_blocked",
+                agent="qa-agent",
+                status="BLOCKED",
+                message=f"QA is blocked until earlier active agents pass validation: {waiting_on}.",
+            )
+
+        if status == "PASS":
+            continue
+
+        if status == "OUTPUT_READY":
+            return NextAction(
+                kind="validate_output",
+                agent=agent_name,
+                status=status,
+                message=f"{agent_name} has output ready and needs validation: {target}",
+                command=f"python3 execution/agency.py validate {agent_name} {project_id}",
+            )
+
+        if status == "PREPARED":
+            return NextAction(
+                kind="operator_work",
+                agent=agent_name,
+                status=status,
+                message=f"{agent_name} is prepared. Operator should complete the expected output: {target}",
+            )
+
+        if status in {"FAIL", "BAD_REPORT"}:
+            return NextAction(
+                kind="fix_validation",
+                agent=agent_name,
+                status=status,
+                message=f"{agent_name} validation is {status}. Fix the output or report before continuing.",
+                command=f"python3 execution/agency.py validate {agent_name} {project_id}",
+            )
+
+        if agent_name in agents_before_qa:
+            blocked_before_qa.append((agent_name, status))
+
+        return NextAction(
+            kind="prepare_agent",
+            agent=agent_name,
+            status=status,
+            message=f"{agent_name} is the next active agent to prepare.",
+            command=f"python3 execution/agency.py prepare {agent_name} {project_id}",
+        )
+
+    if not qa_active:
+        return NextAction(
+            kind="qa_not_active",
+            agent="qa-agent",
+            status="BLOCKED",
+            message="All active non-QA agents are complete, but QA Agent is not active. Delivery requires QA validation before client handoff.",
+            command=f"Edit projects/{project_id}/PROJECT.md and activate qa-agent before delivery.",
+        )
+
+    return NextAction(
+        kind="ready",
+        agent=None,
+        status="READY",
+        message="All active agents, including QA, have passed validation. Project is ready for delivery packaging.",
+    )
+
+
+def cmd_next(args: argparse.Namespace) -> int:
+    action = next_action(args.project_id)
+    print(f"Project: {args.project_id}")
+    print(f"Next action: {action.kind}")
+    print(f"Status: {action.status}")
+    if action.agent:
+        print(f"Agent: {action.agent}")
+    print(action.message)
+    if action.command:
+        print(f"Command: {action.command}")
+    return 0 if action.status != "BLOCKED" else 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agency",
@@ -517,6 +646,10 @@ def build_parser() -> argparse.ArgumentParser:
     status.add_argument("project_id")
     status.set_defaults(func=cmd_status)
 
+    next_step = sub.add_parser("next", help="Show the next safe action for a project.")
+    next_step.add_argument("project_id")
+    next_step.set_defaults(func=cmd_next)
+
     return parser
 
 
@@ -528,4 +661,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
