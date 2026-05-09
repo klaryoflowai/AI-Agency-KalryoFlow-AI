@@ -6,6 +6,7 @@
 - [x] Inițializare Git + GitHub pentru versionare
 - [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
 - [x] Migrare Supabase initiala pregatita local + validator fara conectare live
+- [x] Runner Supabase sync dry-run pregatit, live doar cu `--apply`
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
 - [x] Workflow-to-Skill Factory documentat + Client Context Pack per proiect
 - [ ] Creare cont Supabase și rulare schema DB
@@ -17,7 +18,8 @@
 - [x] BD Agent funcțional pentru propuneri aprobate de CEO
 - [x] Backend Agent + Frontend Agent rulați pe proiect fictiv
 - [x] QA Agent validează output-urile înainte de livrare
-- [ ] Date salvate corect în Supabase și în folderul proiectului
+- [x] Date salvate corect în folderul proiectului
+- [ ] Date salvate corect în Supabase live
 
 ## Luna 2: Dashboard + Orchestrare
 - [ ] UI Dashboard construit în Next.js

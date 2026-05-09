@@ -2,10 +2,11 @@
 
 Acest folder contine schema DB versionata pentru MVP-ul zero-API.
 
-Migrarea initiala este in:
+Migrations sunt in:
 
 ```text
 infrastructure/supabase/migrations/0001_initial_schema.sql
+infrastructure/supabase/migrations/0002_local_sync_keys.sql
 ```
 
 Nu am aplicat migrarea pe un proiect Supabase live. Totul este pregatit local, fara costuri si fara chei secrete.
@@ -19,6 +20,7 @@ Nu am aplicat migrarea pe un proiect Supabase live. Totul este pregatit local, f
 - `documents` - SOW, propuneri, rapoarte, SOP-uri, user guides.
 - `pricing_matrix` - rate si estimari standard.
 - `runtime_llm_usage` - doar pentru runtime LLM client-side aprobat explicit si facturat.
+- chei locale de sync: `projects.local_project_id`, `agent_runs.local_run_key`, `documents.local_document_key`.
 
 ## Reguli de Securitate
 
@@ -44,6 +46,31 @@ Validatorul verifica:
 - lipsa granturilor catre `anon`/`authenticated`;
 - lipsa driftului catre runtime LLM platit (`anthropic`, `openai`, chei API);
 - constrangerile de aprobare pentru `runtime_llm_usage`.
+- cheile locale folosite de runner pentru upsert sigur.
+
+## Sync Runner -> Supabase
+
+Dry-run, fara scriere live:
+
+```bash
+python3 execution/agency.py sync-supabase 2026-05_Restaurant_Demo
+```
+
+Scriere live, doar dupa ce migrațiile sunt aplicate si ai setat variabilele local:
+
+```bash
+SUPABASE_URL=https://xxxxx.supabase.co \
+SUPABASE_SERVICE_KEY=eyJ... \
+python3 execution/agency.py sync-supabase 2026-05_Restaurant_Demo --apply
+```
+
+Ce sincronizeaza:
+
+- `projects` prin `local_project_id`;
+- `agent_runs` prin `local_run_key`;
+- `documents` prin `local_document_key`.
+
+Nu sincronizeaza secrete si nu trimite runtime LLM API calls.
 
 ## Aplicare Cand Cream Proiectul Supabase
 

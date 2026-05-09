@@ -28,6 +28,12 @@ REQUIRED_TABLES = (
     "runtime_llm_usage",
 )
 
+REQUIRED_SYNC_COLUMNS = (
+    "local_project_id",
+    "local_run_key",
+    "local_document_key",
+)
+
 FORBIDDEN_PATTERNS = {
     "paid Anthropic runtime": r"\banthropic\b|ANTHROPIC_API_KEY",
     "paid OpenAI runtime": r"\bopenai\b|OPENAI_API_KEY",
@@ -97,6 +103,9 @@ def check_sql(sql: str) -> CheckResult:
             errors.append(f"Unexpected anon/authenticated grant for public.{table}")
 
     normalized = normalize(sql)
+    for column in REQUIRED_SYNC_COLUMNS:
+        if column not in normalized:
+            errors.append(f"Missing local sync column/index: {column}")
     if "runtime_llm_usage_actual_requires_approval" not in normalized:
         errors.append("Missing runtime LLM approval constraint.")
     if "runtime_llm_usage_approval_consistency" not in normalized:

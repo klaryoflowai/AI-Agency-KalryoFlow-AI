@@ -55,6 +55,7 @@ ai-agency/
 - [x] Prompt-uri și contracte agenți scrise
 - [x] Schema Supabase documentată
 - [x] Migrații Supabase pregătite local + validator RLS
+- [x] Supabase sync dry-run pregătit pentru runner
 - [x] Strategie MVP zero API definită
 - [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
@@ -76,6 +77,7 @@ ai-agency/
 | QA browser | Playwright |
 | Versionare | Git + GitHub |
 | Runner MVP | `python3 execution/agency.py` |
+| Sync DB | `python3 execution/agency.py sync-supabase <project_id>` |
 | CI | GitHub Actions + pytest |
 | Competenta interna | Workflow-to-Skill Factory |
 

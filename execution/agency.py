@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib import error, parse, request
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +52,13 @@ class NextAction:
     status: str
     message: str
     command: str | None = None
+
+
+@dataclass(frozen=True)
+class SupabaseSyncPlan:
+    project: dict[str, Any]
+    agent_runs: tuple[dict[str, Any], ...]
+    documents: tuple[dict[str, Any], ...]
 
 
 AGENTS: dict[str, AgentContract] = {
@@ -300,6 +309,44 @@ def parse_active_agents(project_md: str) -> list[str]:
     return active
 
 
+def first_match(pattern: str, text: str, default: str = "") -> str:
+    match = re.search(pattern, text, re.MULTILINE)
+    return match.group(1).strip() if match else default
+
+
+def extract_brief(project_md: str) -> str:
+    match = re.search(r"## Brief Client.*?```(?:\w+)?\n(.*?)\n```", project_md, re.DOTALL)
+    return match.group(1).strip() if match else ""
+
+
+def extract_project_title(project_md: str, project_id: str) -> str:
+    title = first_match(r"^# PROJECT:\s+(.+)$", project_md, project_id)
+    return title.split("—", 1)[0].strip()
+
+
+def extract_yaml_value(project_md: str, key: str, default: str = "") -> str:
+    pattern = rf"^\s*{re.escape(key)}:\s*(.+?)\s*(?:#.*)?$"
+    raw = first_match(pattern, project_md, default)
+    return raw.strip().strip('"').strip("'")
+
+
+def normalize_project_status(status: str) -> str:
+    normalized = status.strip().lower().replace("-", "_")
+    allowed = {"draft", "active", "pilot_ready", "delivered", "closed", "cancelled"}
+    return normalized if normalized in allowed else "draft"
+
+
+def normalize_agent_run_status(status: str) -> str:
+    return {
+        "PASS": "validated",
+        "FAIL": "error",
+        "BAD_REPORT": "error",
+        "OUTPUT_READY": "done",
+        "PREPARED": "prepared",
+        "PENDING": "pending",
+    }.get(status, "pending")
+
+
 def log_event(project_id: str, event: dict[str, Any]) -> None:
     run_dir = TMP_RUNS_DIR / project_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -424,6 +471,13 @@ def load_json(path: Path) -> Any:
         fail(f"Missing output JSON: {path.relative_to(ROOT)}")
     except json.JSONDecodeError as exc:
         fail(f"Invalid JSON in {path.relative_to(ROOT)}: {exc}")
+
+
+def load_json_or_empty(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    data = load_json(path)
+    return data if isinstance(data, dict) else {}
 
 
 def validate_contract(contract: AgentContract, data: Any) -> tuple[list[str], list[str]]:
@@ -592,6 +646,153 @@ def status_for(project_id: str, contract: AgentContract) -> tuple[str, str]:
     return "PENDING", str(json_path.relative_to(ROOT))
 
 
+def document_type_for(path: Path) -> str:
+    name = path.name.lower()
+    if name == "sow.md":
+        return "sow"
+    if name == "proposal.md":
+        return "proposal"
+    if name == "sop.md":
+        return "sop"
+    if name == "user-guide.md":
+        return "user_guide"
+    if name == "qa-evidence.md":
+        return "qa_report"
+    if name == "handover.md":
+        return "handover"
+    if "workflow" in name:
+        return "workflow"
+    return "report"
+
+
+def collect_project_documents(project_id: str) -> tuple[dict[str, Any], ...]:
+    root = project_dir(project_id)
+    documents: list[dict[str, Any]] = []
+    for folder in (root / "outputs", root / "delivery", root / "inputs"):
+        if not folder.is_dir():
+            continue
+        for path in sorted(folder.rglob("*.md")):
+            relative = path.relative_to(ROOT)
+            source_agent = ""
+            parts = path.relative_to(root).parts
+            if len(parts) >= 3 and parts[0] == "outputs":
+                source_agent = parts[1]
+            documents.append(
+                {
+                    "local_document_key": f"{project_id}:{relative}",
+                    "type": document_type_for(path),
+                    "title": path.stem.replace("-", " ").title(),
+                    "content": path.read_text(encoding="utf-8"),
+                    "url": str(relative),
+                    "source_agent": source_agent or None,
+                }
+            )
+    return tuple(documents)
+
+
+def build_supabase_sync_plan(project_id: str) -> SupabaseSyncPlan:
+    project_path = project_dir(project_id)
+    project_md = read_text(project_path / "PROJECT.md")
+    active_agents = ordered_active_agents(project_md)
+    project_status = first_match(r"^- \*\*status:\*\*\s+(.+)$", project_md, "draft")
+
+    eval_data = load_json_or_empty(output_json_path(project_id, AGENTS["eval-agent"]))
+    project_payload = {
+        "local_project_id": project_id,
+        "name": extract_project_title(project_md, project_id),
+        "status": normalize_project_status(project_status),
+        "brief": extract_brief(project_md),
+        "industry": extract_yaml_value(project_md, "industrie"),
+        "deadline": first_match(r"^- \*\*deadline:\*\*\s+(.+)$", project_md) or None,
+        "estimated_hours": eval_data.get("estimated_hours"),
+        "estimated_cost_eur": eval_data.get("estimated_cost_eur"),
+        "agents_activated": active_agents,
+    }
+
+    agent_runs: list[dict[str, Any]] = []
+    for agent_name in active_agents:
+        contract = contract_for(agent_name)
+        status, target = status_for(project_id, contract)
+        json_path = output_json_path(project_id, contract)
+        output_data = load_json_or_empty(json_path)
+        state = load_json_or_empty(output_dir(project_id, agent_name) / ".runner-state.json")
+        report = load_json_or_empty(output_dir(project_id, agent_name) / "validation-report.json")
+        agent_runs.append(
+            {
+                "local_run_key": f"{project_id}:{agent_name}",
+                "agent_name": agent_name,
+                "operator": operator_slug(contract.owner),
+                "input": {
+                    "local_project_id": project_id,
+                    "prompt_packet_path": state.get("prompt_packet"),
+                    "status_target": target,
+                },
+                "output": output_data,
+                "output_path": str(json_path.relative_to(ROOT)),
+                "prompt_packet_path": state.get("prompt_packet"),
+                "status": normalize_agent_run_status(status),
+                "qa_score": output_data.get("qa_score") if isinstance(output_data.get("qa_score"), (int, float)) else None,
+                "error_message": "; ".join(report.get("errors", [])) if report.get("errors") else None,
+                "prepared_at": state.get("prepared_at"),
+                "validated_at": report.get("validated_at"),
+            }
+        )
+
+    return SupabaseSyncPlan(
+        project=project_payload,
+        agent_runs=tuple(agent_runs),
+        documents=collect_project_documents(project_id),
+    )
+
+
+def operator_slug(owner: str) -> str:
+    lower = owner.lower()
+    if "codex" in lower and "claude" not in lower:
+        return "codex"
+    if "claude" in lower and "codex" not in lower:
+        return "claude-code"
+    if "independent qa" in lower:
+        return "qa-operator"
+    return "other"
+
+
+class SupabaseRestClient:
+    def __init__(self, url: str, key: str) -> None:
+        self.url = url.rstrip("/")
+        self.key = key
+
+    def upsert(self, table: str, payload: dict[str, Any] | list[dict[str, Any]], on_conflict: str) -> Any:
+        query = parse.urlencode({"on_conflict": on_conflict})
+        endpoint = f"{self.url}/rest/v1/{table}?{query}"
+        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        req = request.Request(
+            endpoint,
+            data=body,
+            method="POST",
+            headers={
+                "apikey": self.key,
+                "Authorization": f"Bearer {self.key}",
+                "Content-Type": "application/json",
+                "Prefer": "resolution=merge-duplicates,return=representation",
+            },
+        )
+        try:
+            with request.urlopen(req, timeout=30) as response:
+                raw = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            message = exc.read().decode("utf-8", errors="replace")
+            fail(f"Supabase {table} upsert failed: HTTP {exc.code}: {message}")
+        return json.loads(raw) if raw else None
+
+
+def env_supabase_client() -> SupabaseRestClient:
+    url = os.environ.get("SUPABASE_URL", "")
+    key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    if not url or not key:
+        fail("SUPABASE_URL and SUPABASE_SERVICE_KEY are required for --apply.")
+    return SupabaseRestClient(url, key)
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     project_path = project_dir(args.project_id)
     project_md = read_text(project_path / "PROJECT.md")
@@ -719,6 +920,48 @@ def cmd_next(args: argparse.Namespace) -> int:
     return 0 if action.status != "BLOCKED" else 2
 
 
+def cmd_sync_supabase(args: argparse.Namespace) -> int:
+    plan = build_supabase_sync_plan(args.project_id)
+    print(f"Project: {args.project_id}")
+    print(f"Mode: {'apply' if args.apply else 'dry-run'}")
+    print(f"Project row: {plan.project['local_project_id']} status={plan.project['status']}")
+    print(f"Agent runs: {len(plan.agent_runs)}")
+    print(f"Documents: {len(plan.documents)}")
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "project": plan.project,
+                    "agent_runs": list(plan.agent_runs),
+                    "documents": list(plan.documents),
+                },
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+
+    if not args.apply:
+        print("Dry run only. Use --apply with SUPABASE_URL and SUPABASE_SERVICE_KEY to write live.")
+        return 0
+
+    client = env_supabase_client()
+    project_rows = client.upsert("projects", plan.project, "local_project_id")
+    if not project_rows:
+        fail("Supabase did not return the project row.")
+    supabase_project_id = project_rows[0]["id"]
+
+    runs = [dict(row, project_id=supabase_project_id) for row in plan.agent_runs]
+    docs = [dict(row, project_id=supabase_project_id) for row in plan.documents]
+    if runs:
+        client.upsert("agent_runs", runs, "local_run_key")
+    if docs:
+        client.upsert("documents", docs, "local_document_key")
+
+    print("Supabase sync completed.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agency",
@@ -752,6 +995,12 @@ def build_parser() -> argparse.ArgumentParser:
     next_step = sub.add_parser("next", help="Show the next safe action for a project.")
     next_step.add_argument("project_id")
     next_step.set_defaults(func=cmd_next)
+
+    sync = sub.add_parser("sync-supabase", help="Dry-run or apply local project state to Supabase.")
+    sync.add_argument("project_id")
+    sync.add_argument("--apply", action="store_true", help="Write to Supabase using service-role env vars.")
+    sync.add_argument("--json", action="store_true", help="Print the full sync payload.")
+    sync.set_defaults(func=cmd_sync_supabase)
 
     return parser
 

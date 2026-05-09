@@ -50,6 +50,22 @@ Vezi următorul pas sigur pentru proiect:
 python3 execution/agency.py next YYYY-MM_Client
 ```
 
+Pregateste sync-ul catre Supabase fara scriere live:
+
+```bash
+python3 execution/agency.py sync-supabase YYYY-MM_Client
+```
+
+Scrierea live cere explicit `--apply` si env vars server-side:
+
+```bash
+SUPABASE_URL=https://xxxxx.supabase.co \
+SUPABASE_SERVICE_KEY=... \
+python3 execution/agency.py sync-supabase YYYY-MM_Client --apply
+```
+
+Cheia `service_role` nu se pune niciodata in frontend sau Git.
+
 Valideaza migrarea Supabase fara conectare live:
 
 ```bash
@@ -79,11 +95,12 @@ Runner-ul verifică:
 - contractele v2 pentru BD, Marketing și Client Success;
 - QA delivery gate: `qa_score >= 7`, status aprobat, SOW coverage 100%.
 - Next-action gate: QA nu poate porni până când agenții anteriori activi nu au validare `PASS`.
+- Supabase sync dry-run: proiect, agent runs și documente sunt mapate înainte de scriere live.
 
 ## Ce Nu Face
 
 - Nu cheltuie API credits.
 - Nu trimite emailuri.
 - Nu publică conținut.
-- Nu scrie în Supabase încă; logul MVP este local în `.tmp/agency/`.
+- Nu scrie în Supabase fără `--apply` și env vars explicite.
 - Nu aplică migrații Supabase live; verificarea DB este locală până avem aprobare.
