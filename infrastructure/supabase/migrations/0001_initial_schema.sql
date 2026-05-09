@@ -2,14 +2,17 @@
 -- Initial Supabase schema for the zero-API MVP.
 --
 -- This migration is intentionally backend/operator oriented:
--- - no public anon/authenticated access by default;
--- - RLS enabled on every public table;
+-- - all agency objects live in the isolated `agency` schema;
+-- - no anon/authenticated access by default;
+-- - RLS enabled on every agency table;
 -- - runtime LLM usage is tracked only when approved and billed per client.
 
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 
-create table if not exists public.clients (
+create schema if not exists agency;
+
+create table if not exists agency.clients (
   id uuid primary key default extensions.gen_random_uuid(),
   name text not null,
   industry text,
@@ -25,9 +28,9 @@ create table if not exists public.clients (
     check (contact_email is null or position('@' in contact_email) > 1)
 );
 
-create table if not exists public.projects (
+create table if not exists agency.projects (
   id uuid primary key default extensions.gen_random_uuid(),
-  client_id uuid references public.clients(id) on delete set null,
+  client_id uuid references agency.clients(id) on delete set null,
   name text not null,
   status text not null default 'draft',
   brief text,
@@ -51,9 +54,9 @@ create table if not exists public.projects (
     )
 );
 
-create table if not exists public.agent_runs (
+create table if not exists agency.agent_runs (
   id uuid primary key default extensions.gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
+  project_id uuid not null references agency.projects(id) on delete cascade,
   agent_name text not null,
   operator text,
   input jsonb not null default '{}'::jsonb,
@@ -95,10 +98,10 @@ create table if not exists public.agent_runs (
     check (qa_score is null or (qa_score >= 0 and qa_score <= 10))
 );
 
-create table if not exists public.agent_run_events (
+create table if not exists agency.agent_run_events (
   id uuid primary key default extensions.gen_random_uuid(),
-  agent_run_id uuid references public.agent_runs(id) on delete cascade,
-  project_id uuid not null references public.projects(id) on delete cascade,
+  agent_run_id uuid references agency.agent_runs(id) on delete cascade,
+  project_id uuid not null references agency.projects(id) on delete cascade,
   agent_name text,
   event_type text not null,
   event_payload jsonb not null default '{}'::jsonb,
@@ -108,9 +111,9 @@ create table if not exists public.agent_run_events (
     check (length(trim(event_type)) > 0)
 );
 
-create table if not exists public.documents (
+create table if not exists agency.documents (
   id uuid primary key default extensions.gen_random_uuid(),
-  project_id uuid references public.projects(id) on delete cascade,
+  project_id uuid references agency.projects(id) on delete cascade,
   type text not null,
   title text,
   content text,
@@ -123,7 +126,7 @@ create table if not exists public.documents (
     check (type in ('sow', 'proposal', 'report', 'handover', 'sop', 'code', 'qa_report', 'user_guide', 'workflow', 'other'))
 );
 
-create table if not exists public.pricing_matrix (
+create table if not exists agency.pricing_matrix (
   id uuid primary key default extensions.gen_random_uuid(),
   service_type text not null unique,
   description text,
@@ -142,10 +145,10 @@ create table if not exists public.pricing_matrix (
     check (hourly_rate_eur > 0)
 );
 
-create table if not exists public.runtime_llm_usage (
+create table if not exists agency.runtime_llm_usage (
   id uuid primary key default extensions.gen_random_uuid(),
-  project_id uuid references public.projects(id) on delete cascade,
-  client_id uuid references public.clients(id) on delete set null,
+  project_id uuid references agency.projects(id) on delete cascade,
+  client_id uuid references agency.clients(id) on delete set null,
   usage_type text not null default 'estimate',
   provider text,
   model text,
@@ -175,10 +178,10 @@ create table if not exists public.runtime_llm_usage (
     )
 );
 
-create or replace function public.set_updated_at()
+create or replace function agency.set_updated_at()
 returns trigger
 language plpgsql
-set search_path = public
+set search_path = agency
 as $$
 begin
   new.updated_at = now();
@@ -186,117 +189,131 @@ begin
 end;
 $$;
 
-drop trigger if exists clients_set_updated_at on public.clients;
+drop trigger if exists clients_set_updated_at on agency.clients;
 create trigger clients_set_updated_at
-  before update on public.clients
-  for each row execute function public.set_updated_at();
+  before update on agency.clients
+  for each row execute function agency.set_updated_at();
 
-drop trigger if exists projects_set_updated_at on public.projects;
+drop trigger if exists projects_set_updated_at on agency.projects;
 create trigger projects_set_updated_at
-  before update on public.projects
-  for each row execute function public.set_updated_at();
+  before update on agency.projects
+  for each row execute function agency.set_updated_at();
 
-drop trigger if exists agent_runs_set_updated_at on public.agent_runs;
+drop trigger if exists agent_runs_set_updated_at on agency.agent_runs;
 create trigger agent_runs_set_updated_at
-  before update on public.agent_runs
-  for each row execute function public.set_updated_at();
+  before update on agency.agent_runs
+  for each row execute function agency.set_updated_at();
 
-drop trigger if exists documents_set_updated_at on public.documents;
+drop trigger if exists documents_set_updated_at on agency.documents;
 create trigger documents_set_updated_at
-  before update on public.documents
-  for each row execute function public.set_updated_at();
+  before update on agency.documents
+  for each row execute function agency.set_updated_at();
 
-drop trigger if exists pricing_matrix_set_updated_at on public.pricing_matrix;
+drop trigger if exists pricing_matrix_set_updated_at on agency.pricing_matrix;
 create trigger pricing_matrix_set_updated_at
-  before update on public.pricing_matrix
-  for each row execute function public.set_updated_at();
+  before update on agency.pricing_matrix
+  for each row execute function agency.set_updated_at();
 
-create index if not exists clients_name_idx on public.clients (name);
-create index if not exists projects_client_id_idx on public.projects (client_id);
-create index if not exists projects_status_idx on public.projects (status);
-create index if not exists agent_runs_project_id_idx on public.agent_runs (project_id);
-create index if not exists agent_runs_status_idx on public.agent_runs (status);
-create index if not exists agent_runs_agent_name_idx on public.agent_runs (agent_name);
-create index if not exists agent_run_events_project_id_idx on public.agent_run_events (project_id);
-create index if not exists documents_project_id_idx on public.documents (project_id);
-create index if not exists runtime_llm_usage_project_id_idx on public.runtime_llm_usage (project_id);
-create index if not exists runtime_llm_usage_client_id_idx on public.runtime_llm_usage (client_id);
+create index if not exists clients_name_idx on agency.clients (name);
+create index if not exists projects_client_id_idx on agency.projects (client_id);
+create index if not exists projects_status_idx on agency.projects (status);
+create index if not exists agent_runs_project_id_idx on agency.agent_runs (project_id);
+create index if not exists agent_runs_status_idx on agency.agent_runs (status);
+create index if not exists agent_runs_agent_name_idx on agency.agent_runs (agent_name);
+create index if not exists agent_run_events_project_id_idx on agency.agent_run_events (project_id);
+create index if not exists documents_project_id_idx on agency.documents (project_id);
+create index if not exists runtime_llm_usage_project_id_idx on agency.runtime_llm_usage (project_id);
+create index if not exists runtime_llm_usage_client_id_idx on agency.runtime_llm_usage (client_id);
 
-alter table public.clients enable row level security;
-alter table public.projects enable row level security;
-alter table public.agent_runs enable row level security;
-alter table public.agent_run_events enable row level security;
-alter table public.documents enable row level security;
-alter table public.pricing_matrix enable row level security;
-alter table public.runtime_llm_usage enable row level security;
+alter table agency.clients enable row level security;
+alter table agency.projects enable row level security;
+alter table agency.agent_runs enable row level security;
+alter table agency.agent_run_events enable row level security;
+alter table agency.documents enable row level security;
+alter table agency.pricing_matrix enable row level security;
+alter table agency.runtime_llm_usage enable row level security;
 
-revoke all on table public.clients from anon, authenticated;
-revoke all on table public.projects from anon, authenticated;
-revoke all on table public.agent_runs from anon, authenticated;
-revoke all on table public.agent_run_events from anon, authenticated;
-revoke all on table public.documents from anon, authenticated;
-revoke all on table public.pricing_matrix from anon, authenticated;
-revoke all on table public.runtime_llm_usage from anon, authenticated;
+revoke all on schema agency from public, anon, authenticated;
+revoke all on all tables in schema agency from anon, authenticated;
+revoke all on all routines in schema agency from anon, authenticated;
+revoke all on all sequences in schema agency from anon, authenticated;
 
-grant usage on schema public to service_role;
-grant all on table public.clients to service_role;
-grant all on table public.projects to service_role;
-grant all on table public.agent_runs to service_role;
-grant all on table public.agent_run_events to service_role;
-grant all on table public.documents to service_role;
-grant all on table public.pricing_matrix to service_role;
-grant all on table public.runtime_llm_usage to service_role;
+revoke all on table agency.clients from anon, authenticated;
+revoke all on table agency.projects from anon, authenticated;
+revoke all on table agency.agent_runs from anon, authenticated;
+revoke all on table agency.agent_run_events from anon, authenticated;
+revoke all on table agency.documents from anon, authenticated;
+revoke all on table agency.pricing_matrix from anon, authenticated;
+revoke all on table agency.runtime_llm_usage from anon, authenticated;
 
-drop policy if exists "service_role full access clients" on public.clients;
+grant usage on schema agency to service_role;
+grant all on table agency.clients to service_role;
+grant all on table agency.projects to service_role;
+grant all on table agency.agent_runs to service_role;
+grant all on table agency.agent_run_events to service_role;
+grant all on table agency.documents to service_role;
+grant all on table agency.pricing_matrix to service_role;
+grant all on table agency.runtime_llm_usage to service_role;
+grant all on all sequences in schema agency to service_role;
+grant execute on all routines in schema agency to service_role;
+
+alter default privileges for role postgres in schema agency
+  grant all on tables to service_role;
+alter default privileges for role postgres in schema agency
+  grant usage, select on sequences to service_role;
+alter default privileges for role postgres in schema agency
+  grant execute on routines to service_role;
+
+drop policy if exists "service_role full access clients" on agency.clients;
 create policy "service_role full access clients"
-  on public.clients for all
+  on agency.clients for all
   to service_role
   using (true)
   with check (true);
 
-drop policy if exists "service_role full access projects" on public.projects;
+drop policy if exists "service_role full access projects" on agency.projects;
 create policy "service_role full access projects"
-  on public.projects for all
+  on agency.projects for all
   to service_role
   using (true)
   with check (true);
 
-drop policy if exists "service_role full access agent_runs" on public.agent_runs;
+drop policy if exists "service_role full access agent_runs" on agency.agent_runs;
 create policy "service_role full access agent_runs"
-  on public.agent_runs for all
+  on agency.agent_runs for all
   to service_role
   using (true)
   with check (true);
 
-drop policy if exists "service_role full access agent_run_events" on public.agent_run_events;
+drop policy if exists "service_role full access agent_run_events" on agency.agent_run_events;
 create policy "service_role full access agent_run_events"
-  on public.agent_run_events for all
+  on agency.agent_run_events for all
   to service_role
   using (true)
   with check (true);
 
-drop policy if exists "service_role full access documents" on public.documents;
+drop policy if exists "service_role full access documents" on agency.documents;
 create policy "service_role full access documents"
-  on public.documents for all
+  on agency.documents for all
   to service_role
   using (true)
   with check (true);
 
-drop policy if exists "service_role full access pricing_matrix" on public.pricing_matrix;
+drop policy if exists "service_role full access pricing_matrix" on agency.pricing_matrix;
 create policy "service_role full access pricing_matrix"
-  on public.pricing_matrix for all
+  on agency.pricing_matrix for all
   to service_role
   using (true)
   with check (true);
 
-drop policy if exists "service_role full access runtime_llm_usage" on public.runtime_llm_usage;
+drop policy if exists "service_role full access runtime_llm_usage" on agency.runtime_llm_usage;
 create policy "service_role full access runtime_llm_usage"
-  on public.runtime_llm_usage for all
+  on agency.runtime_llm_usage for all
   to service_role
   using (true)
   with check (true);
 
-insert into public.pricing_matrix (
+insert into agency.pricing_matrix (
   service_type,
   description,
   base_hours_min,

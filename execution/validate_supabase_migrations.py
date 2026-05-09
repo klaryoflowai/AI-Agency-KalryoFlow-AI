@@ -17,6 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MIGRATIONS_DIR = ROOT / "infrastructure" / "supabase" / "migrations"
+SUPABASE_SCHEMA = "agency"
 
 REQUIRED_TABLES = (
     "clients",
@@ -61,22 +62,22 @@ def migration_files() -> list[Path]:
 
 
 def has_table(sql: str, table: str) -> bool:
-    pattern = rf"create\s+table\s+(if\s+not\s+exists\s+)?public\.{re.escape(table)}\b"
+    pattern = rf"create\s+table\s+(if\s+not\s+exists\s+)?{SUPABASE_SCHEMA}\.{re.escape(table)}\b"
     return bool(re.search(pattern, sql, re.IGNORECASE))
 
 
 def has_rls(sql: str, table: str) -> bool:
-    pattern = rf"alter\s+table\s+public\.{re.escape(table)}\s+enable\s+row\s+level\s+security"
+    pattern = rf"alter\s+table\s+{SUPABASE_SCHEMA}\.{re.escape(table)}\s+enable\s+row\s+level\s+security"
     return bool(re.search(pattern, sql, re.IGNORECASE))
 
 
 def has_service_policy(sql: str, table: str) -> bool:
-    pattern = rf"create\s+policy\s+.*?\s+on\s+public\.{re.escape(table)}\s+for\s+all\s+to\s+service_role"
+    pattern = rf"create\s+policy\s+.*?\s+on\s+{SUPABASE_SCHEMA}\.{re.escape(table)}\s+for\s+all\s+to\s+service_role"
     return bool(re.search(pattern, sql, re.IGNORECASE | re.DOTALL))
 
 
-def has_public_grant(sql: str, table: str) -> bool:
-    pattern = rf"grant\s+(select|insert|update|delete|all).*?\s+on\s+table\s+public\.{re.escape(table)}\s+to\s+(anon|authenticated)"
+def has_anon_authenticated_grant(sql: str, table: str) -> bool:
+    pattern = rf"grant\s+(select|insert|update|delete|all).*?\s+on\s+table\s+{SUPABASE_SCHEMA}\.{re.escape(table)}\s+to\s+(anon|authenticated)"
     return bool(re.search(pattern, sql, re.IGNORECASE | re.DOTALL))
 
 
@@ -92,17 +93,43 @@ def check_sql(sql: str) -> CheckResult:
         if re.search(pattern, sql, re.IGNORECASE):
             errors.append(f"Forbidden pattern found: {label}")
 
+    normalized = normalize(sql)
+    if f"create schema if not exists {SUPABASE_SCHEMA}" not in normalized:
+        errors.append(f"Missing isolated Supabase schema: {SUPABASE_SCHEMA}")
+    if f"grant usage on schema {SUPABASE_SCHEMA} to service_role" not in normalized:
+        errors.append(f"Missing service_role schema usage grant for {SUPABASE_SCHEMA}.")
+    if re.search(
+        rf"grant\s+usage\s+on\s+schema\s+{SUPABASE_SCHEMA}\s+to\s+(anon|authenticated)",
+        sql,
+        re.IGNORECASE,
+    ):
+        errors.append(f"Unexpected anon/authenticated schema usage grant for {SUPABASE_SCHEMA}.")
+    if re.search(
+        rf"grant\s+.*?\s+on\s+all\s+(tables|routines|sequences)\s+in\s+schema\s+{SUPABASE_SCHEMA}\s+to\s+(anon|authenticated)",
+        sql,
+        re.IGNORECASE | re.DOTALL,
+    ):
+        errors.append(f"Unexpected anon/authenticated bulk grant for {SUPABASE_SCHEMA}.")
+    if re.search(
+        rf"alter\s+default\s+privileges.*?\s+in\s+schema\s+{SUPABASE_SCHEMA}\s+grant\s+.*?\s+to\s+(anon|authenticated)",
+        sql,
+        re.IGNORECASE | re.DOTALL,
+    ):
+        errors.append(f"Unexpected anon/authenticated default privilege grant for {SUPABASE_SCHEMA}.")
+
     for table in REQUIRED_TABLES:
         if not has_table(sql, table):
-            errors.append(f"Missing required table: public.{table}")
+            errors.append(f"Missing required table: {SUPABASE_SCHEMA}.{table}")
         if not has_rls(sql, table):
-            errors.append(f"Missing RLS enable statement for public.{table}")
+            errors.append(f"Missing RLS enable statement for {SUPABASE_SCHEMA}.{table}")
         if not has_service_policy(sql, table):
-            errors.append(f"Missing service_role full-access policy for public.{table}")
-        if has_public_grant(sql, table):
-            errors.append(f"Unexpected anon/authenticated grant for public.{table}")
+            errors.append(f"Missing service_role full-access policy for {SUPABASE_SCHEMA}.{table}")
+        if has_anon_authenticated_grant(sql, table):
+            errors.append(f"Unexpected anon/authenticated grant for {SUPABASE_SCHEMA}.{table}")
+        public_table_pattern = rf"(create|alter|grant|revoke).*?\bpublic\.{re.escape(table)}\b"
+        if re.search(public_table_pattern, sql, re.IGNORECASE | re.DOTALL):
+            errors.append(f"Shared-project mode must not mutate public.{table}")
 
-    normalized = normalize(sql)
     for column in REQUIRED_SYNC_COLUMNS:
         if column not in normalized:
             errors.append(f"Missing local sync column/index: {column}")

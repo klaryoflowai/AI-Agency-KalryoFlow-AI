@@ -22,6 +22,7 @@ from urllib import error, parse, request
 ROOT = Path(__file__).resolve().parents[1]
 PROJECTS_DIR = ROOT / "projects"
 TMP_RUNS_DIR = ROOT / ".tmp" / "agency"
+DEFAULT_SUPABASE_SCHEMA = "agency"
 PIPELINE_ORDER = (
     "orchestrator",
     "eval-agent",
@@ -757,9 +758,10 @@ def operator_slug(owner: str) -> str:
 
 
 class SupabaseRestClient:
-    def __init__(self, url: str, key: str) -> None:
+    def __init__(self, url: str, key: str, schema: str = DEFAULT_SUPABASE_SCHEMA) -> None:
         self.url = url.rstrip("/")
         self.key = key
+        self.schema = schema.strip() or DEFAULT_SUPABASE_SCHEMA
 
     def upsert(self, table: str, payload: dict[str, Any] | list[dict[str, Any]], on_conflict: str) -> Any:
         query = parse.urlencode({"on_conflict": on_conflict})
@@ -773,6 +775,8 @@ class SupabaseRestClient:
                 "apikey": self.key,
                 "Authorization": f"Bearer {self.key}",
                 "Content-Type": "application/json",
+                "Accept-Profile": self.schema,
+                "Content-Profile": self.schema,
                 "Prefer": "resolution=merge-duplicates,return=representation",
             },
         )
@@ -781,16 +785,20 @@ class SupabaseRestClient:
                 raw = response.read().decode("utf-8")
         except error.HTTPError as exc:
             message = exc.read().decode("utf-8", errors="replace")
-            fail(f"Supabase {table} upsert failed: HTTP {exc.code}: {message}")
+            fail(
+                f"Supabase {self.schema}.{table} upsert failed: HTTP {exc.code}: {message}\n"
+                f"Check that schema '{self.schema}' is listed in Supabase Data API exposed schemas "
+                "and that the migration grants service_role access."
+            )
         return json.loads(raw) if raw else None
 
 
-def env_supabase_client() -> SupabaseRestClient:
+def env_supabase_client(schema: str) -> SupabaseRestClient:
     url = os.environ.get("SUPABASE_URL", "")
     key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
     if not url or not key:
         fail("SUPABASE_URL and SUPABASE_SERVICE_KEY are required for --apply.")
-    return SupabaseRestClient(url, key)
+    return SupabaseRestClient(url, key, schema=schema)
 
 
 def cmd_status(args: argparse.Namespace) -> int:
@@ -924,6 +932,7 @@ def cmd_sync_supabase(args: argparse.Namespace) -> int:
     plan = build_supabase_sync_plan(args.project_id)
     print(f"Project: {args.project_id}")
     print(f"Mode: {'apply' if args.apply else 'dry-run'}")
+    print(f"Supabase schema: {args.schema}")
     print(f"Project row: {plan.project['local_project_id']} status={plan.project['status']}")
     print(f"Agent runs: {len(plan.agent_runs)}")
     print(f"Documents: {len(plan.documents)}")
@@ -945,7 +954,7 @@ def cmd_sync_supabase(args: argparse.Namespace) -> int:
         print("Dry run only. Use --apply with SUPABASE_URL and SUPABASE_SERVICE_KEY to write live.")
         return 0
 
-    client = env_supabase_client()
+    client = env_supabase_client(args.schema)
     project_rows = client.upsert("projects", plan.project, "local_project_id")
     if not project_rows:
         fail("Supabase did not return the project row.")
@@ -1000,6 +1009,11 @@ def build_parser() -> argparse.ArgumentParser:
     sync.add_argument("project_id")
     sync.add_argument("--apply", action="store_true", help="Write to Supabase using service-role env vars.")
     sync.add_argument("--json", action="store_true", help="Print the full sync payload.")
+    sync.add_argument(
+        "--schema",
+        default=os.environ.get("SUPABASE_SCHEMA", DEFAULT_SUPABASE_SCHEMA),
+        help=f"Supabase PostgREST schema/profile to use (default: {DEFAULT_SUPABASE_SCHEMA}).",
+    )
     sync.set_defaults(func=cmd_sync_supabase)
 
     return parser

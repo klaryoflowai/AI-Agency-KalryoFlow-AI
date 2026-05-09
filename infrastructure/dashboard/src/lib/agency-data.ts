@@ -194,7 +194,7 @@ export const operatorQueue = [
     label: "Live Supabase apply",
     owner: "Codex" as OperatorName,
     command:
-      "SUPABASE_URL=... SUPABASE_SERVICE_KEY=... python3 execution/agency.py sync-supabase 2026-05_Restaurant_Demo --apply",
+      "SUPABASE_URL=... SUPABASE_SCHEMA=agency SUPABASE_SERVICE_KEY=... python3 execution/agency.py sync-supabase 2026-05_Restaurant_Demo --apply",
   },
 ];
 

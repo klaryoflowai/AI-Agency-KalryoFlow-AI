@@ -111,16 +111,18 @@ Notă: Orchestratorul coordonează, dar nu livrează direct lucrări client. Exe
 
 ## Schema Bază de Date (Supabase)
 
-Schema completă se află în `infrastructure/supabase/SETUP.md`. Entitățile principale:
+Schema completă se află în `infrastructure/supabase/SETUP.md`. Pentru proiecte
+Supabase partajate, toate obiectele MVP sunt izolate în schema `agency`.
+Entitățile principale:
 
 ```sql
-clients
-projects
-agent_runs
-agent_run_events
-documents
-pricing_matrix
-runtime_llm_usage -- doar pentru faza cu API client-side
+agency.clients
+agency.projects
+agency.agent_runs
+agency.agent_run_events
+agency.documents
+agency.pricing_matrix
+agency.runtime_llm_usage -- doar pentru faza cu API client-side
 ```
 
 ---

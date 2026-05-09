@@ -84,6 +84,10 @@ ai-agency/
 | CI | GitHub Actions + pytest + Next.js build |
 | Competenta interna | Workflow-to-Skill Factory |
 
+Supabase rulează în shared-project mode: obiectele MVP sunt izolate în schema
+`agency`, astfel încât putem folosi un proiect Supabase existent fără să atingem
+tabelele vechi din `public`.
+
 ---
 
 ## Principiul de Cost

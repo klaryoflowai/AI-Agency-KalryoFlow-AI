@@ -60,9 +60,13 @@ Scrierea live cere explicit `--apply` si env vars server-side:
 
 ```bash
 SUPABASE_URL=https://xxxxx.supabase.co \
+SUPABASE_SCHEMA=agency \
 SUPABASE_SERVICE_KEY=... \
 python3 execution/agency.py sync-supabase YYYY-MM_Client --apply
 ```
+
+Default-ul este `SUPABASE_SCHEMA=agency`, astfel incat runner-ul poate scrie intr-un
+proiect Supabase existent fara sa atinga tabelele din `public`.
 
 Cheia `service_role` nu se pune niciodata in frontend sau Git.
 
