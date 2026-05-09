@@ -93,15 +93,19 @@ AGENTS: dict[str, AgentContract] = {
     ),
     "bd-agent": AgentContract(
         name="bd-agent",
-        schema_version="bd-agent.v1",
+        schema_version="bd-agent.v2",
         output_json="proposal.json",
         owner="Codex or Claude Code; CEO approves before send",
         required_fields=(
             "schema_version",
             "document_type",
+            "lead_qualification",
             "subject",
             "content",
             "cta",
+            "pricing_source",
+            "discount_applied",
+            "ceo_approval_required",
             "next_followup_days",
             "notes",
         ),
@@ -184,34 +188,49 @@ AGENTS: dict[str, AgentContract] = {
     ),
     "marketing-agent": AgentContract(
         name="marketing-agent",
-        schema_version="marketing-agent.v1",
+        schema_version="marketing-agent.v2",
         output_json="content.json",
         owner="Claude Code or Codex; CEO approves before publish",
         required_fields=(
             "schema_version",
             "content_type",
+            "pillar",
             "title",
+            "meta_description",
+            "target_keyword",
+            "target_audience",
             "content",
             "cta",
-            "target_audience",
             "distribution_channels",
+            "estimated_reach",
+            "metrics_to_track",
+            "data_sources_used",
+            "anonymization_confirmed",
+            "approval_required",
             "notes",
         ),
     ),
     "client-success-agent": AgentContract(
         name="client-success-agent",
-        schema_version="client-success-agent.v1",
+        schema_version="client-success-agent.v2",
         output_json="client-success.json",
         owner="Claude Code or Codex; CEO approves before send",
         required_fields=(
             "schema_version",
             "communication_type",
             "client_id",
+            "project_id",
+            "health_score",
+            "health_score_breakdown",
+            "churn_risk",
+            "churn_signals",
             "content",
             "upsell_opportunities",
-            "health_score",
-            "action_required",
+            "escalation_required",
+            "escalation_reason",
+            "action_required_from_ceo",
             "next_touchpoint_days",
+            "notes",
         ),
     ),
 }
@@ -423,6 +442,83 @@ def validate_contract(contract: AgentContract, data: Any) -> tuple[list[str], li
         complexity = data.get("complexity_score")
         if isinstance(complexity, int) and complexity == 5 and data.get("recommendation") == "APPROVE":
             warnings.append("Complexity 5 with APPROVE requires explicit CEO review.")
+
+    if contract.name == "bd-agent":
+        allowed_docs = {"qualification_report", "proposal", "email_followup", "pitch", "objection_response"}
+        if data.get("document_type") not in allowed_docs:
+            errors.append(f"document_type must be one of: {', '.join(sorted(allowed_docs))}")
+        qualification = data.get("lead_qualification")
+        if not isinstance(qualification, dict):
+            errors.append("lead_qualification must be an object.")
+        else:
+            signal_fields = (
+                "budget_signal",
+                "authority_signal",
+                "need_signal",
+                "timeline_signal",
+                "decision_process_signal",
+                "fit_signal",
+            )
+            for field in signal_fields:
+                if qualification.get(field) not in {"green", "yellow", "red"}:
+                    errors.append(f"lead_qualification.{field} must be green, yellow, or red.")
+            if qualification.get("recommendation") not in {"MOVE_FORWARD", "NURTURE", "PARK"}:
+                errors.append("lead_qualification.recommendation must be MOVE_FORWARD, NURTURE, or PARK.")
+        if data.get("discount_applied") is True and data.get("ceo_approval_required") is not True:
+            errors.append("discount_applied=true requires ceo_approval_required=true.")
+        if data.get("ceo_approval_required") is not True:
+            errors.append("BD outputs require ceo_approval_required=true before external use.")
+
+    if contract.name == "marketing-agent":
+        allowed_content_types = {
+            "blog_seo",
+            "linkedin_text",
+            "linkedin_carousel",
+            "linkedin_opinion",
+            "case_study",
+            "email_nurture",
+            "email_single",
+            "ad_copy",
+        }
+        allowed_pillars = {"educatie", "dovezi", "thought_leadership", "behind_scenes"}
+        if data.get("content_type") not in allowed_content_types:
+            errors.append(f"content_type must be one of: {', '.join(sorted(allowed_content_types))}")
+        if data.get("pillar") not in allowed_pillars:
+            errors.append(f"pillar must be one of: {', '.join(sorted(allowed_pillars))}")
+        if data.get("approval_required") is not True:
+            errors.append("Marketing outputs require approval_required=true before publishing.")
+        if data.get("content_type") == "case_study" and data.get("anonymization_confirmed") is not True:
+            errors.append("case_study content requires anonymization_confirmed=true.")
+        if data.get("content_type") == "blog_seo":
+            meta = str(data.get("meta_description", ""))
+            if len(meta) > 155:
+                warnings.append("meta_description is longer than 155 characters.")
+            if not data.get("target_keyword"):
+                errors.append("blog_seo content requires target_keyword.")
+
+    if contract.name == "client-success-agent":
+        score = data.get("health_score")
+        if not isinstance(score, (int, float)) or not 1 <= score <= 10:
+            errors.append("health_score must be a number from 1 to 10.")
+        breakdown = data.get("health_score_breakdown")
+        if not isinstance(breakdown, dict):
+            errors.append("health_score_breakdown must be an object.")
+        else:
+            limits = {"technical": 4, "satisfaction": 3, "engagement": 2, "business_fit": 1}
+            for field, maximum in limits.items():
+                value = breakdown.get(field)
+                if not isinstance(value, (int, float)) or value < 0 or value > maximum:
+                    errors.append(f"health_score_breakdown.{field} must be between 0 and {maximum}.")
+        if data.get("churn_risk") not in {"none", "low", "medium", "high", "critical"}:
+            errors.append("churn_risk must be none, low, medium, high, or critical.")
+        if not isinstance(data.get("churn_signals"), list):
+            errors.append("churn_signals must be a list.")
+        if (isinstance(score, (int, float)) and score <= 4) and data.get("escalation_required") is not True:
+            errors.append("health_score <= 4 requires escalation_required=true.")
+        if data.get("churn_risk") in {"high", "critical"} and data.get("escalation_required") is not True:
+            errors.append("high/critical churn_risk requires escalation_required=true.")
+        if data.get("escalation_required") is True and not data.get("escalation_reason"):
+            errors.append("escalation_required=true requires escalation_reason.")
 
     if contract.name == "qa-agent":
         score = data.get("qa_score")
