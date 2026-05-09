@@ -1,0 +1,13 @@
+.env
+.env.local
+.env.*.local
+.env.project
+projects/*/.env.project
+!projects/template/.env.project
+.tmp/
+artefacts/
+*.pyc
+__pycache__/
+.DS_Store
+node_modules/
+.obsidian/

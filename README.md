@@ -1,0 +1,79 @@
+# AI Agency - Suita de Agenti pentru Automatizare IMM-uri
+
+## Viziunea Proiectului
+Agenție care oferă servicii de automatizare cu AI pentru companii mici și mijlocii.
+Modelul de lucru pentru MVP este **zero API LLM plătit**: Codex și Claude Code sunt operatorii de implementare, iar agenții din `agents/*/SKILL.md` sunt contractele de lucru.
+
+Automatizările client care trebuie să ruleze singure în producție pot folosi API LLM plătit doar ulterior, per client, cu aprobare explicită și cost inclus în ofertă.
+
+---
+
+## Structura Folderelor
+
+```
+ai-agency/
+├── AGENTS.md                   ← context pentru Codex
+├── CLAUDE.md                   ← context pentru Claude Code
+├── README.md                   ← overview pentru oameni
+├── docs/
+│   ├── blueprint.md            ← arhitectura completă a sistemului
+│   ├── business-model.md       ← modelul de business & strategie
+│   ├── stack-tehnic.md         ← tehnologii folosite & de ce
+│   ├── roadmap.md              ← plan de implementare pe faze
+│   └── rules/                  ← reguli auto-încărcate per sesiune
+│
+├── agents/
+│   ├── orchestrator/           ← coordonare
+│   ├── eval-agent/             ← evaluare proiecte
+│   ├── bd-agent/               ← business development
+│   ├── backend-agent/          ← API-uri, DB, integrări server-side
+│   ├── frontend-agent/         ← UI, dashboard-uri, React/Next.js
+│   ├── qa-agent/               ← quality assurance & livrare
+│   ├── ops-agent/              ← operațiuni & workflow-uri
+│   ├── marketing-agent/        ← conținut & marketing
+│   └── client-success-agent/   ← relație post-livrare
+│
+├── infrastructure/
+│   ├── supabase/               ← schema bază de date
+│   ├── n8n/                    ← workflow-uri orchestrare
+│   └── dashboard/              ← UI vizual
+│
+├── projects/
+│   └── template/               ← template refolosibil per proiect nou
+│
+└── resources/
+    ├── pricing-matrix.md       ← matrice de prețuri servicii
+    ├── client-brief-template.md← template brief pentru clienți
+    └── freelancer-brief.md     ← brief pentru freelancerul tehnic
+```
+
+---
+
+## Status Curent
+- [x] Arhitectură definită
+- [x] Structură foldere creată
+- [x] Prompt-uri și contracte agenți scrise
+- [x] Schema Supabase documentată
+- [x] Strategie MVP zero API definită
+- [ ] Infrastructură configurată
+- [ ] Dashboard UI
+- [ ] Primul proiect pilot
+
+---
+
+## Tool-uri Folosite
+| Rol | Tool |
+|-----|------|
+| Operatori AI MVP | Codex + Claude Code |
+| Runtime LLM producție client | API plătit doar dacă este aprobat și facturat |
+| Orchestrare | n8n Cloud pentru taskuri, statusuri, webhook-uri |
+| Bază de date | Supabase |
+| Dashboard UI | Vercel + Next.js |
+| QA browser | Playwright |
+| Versionare | Git + GitHub |
+
+---
+
+## Principiul de Cost
+În MVP, agenția folosește abonamentele Codex/Claude Code pentru analiză, implementare, QA și documentație. Nu se adaugă chei `ANTHROPIC_API_KEY` sau alte chei LLM în proiect decât pentru automatizări client aprobate explicit.
+

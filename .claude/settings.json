@@ -1,0 +1,58 @@
+{
+  "env": {
+    "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1"
+  },
+  "permissions": {
+    "deny": [
+      "Bash(git push *)",
+      "Bash(rm -rf *)",
+      "Bash(*ANTHROPIC_API_KEY*)",
+      "Bash(*OPENAI_API_KEY*)",
+      "Bash(*@anthropic-ai/sdk*)",
+      "Bash(*import anthropic*)",
+      "Bash(*from anthropic*)",
+      "Bash(*import openai*)"
+    ],
+    "ask": [
+      "Edit(AGENTS.md)",
+      "Edit(CLAUDE.md)",
+      "Edit(agents/*/SKILL.md)",
+      "Write(agents/*/SKILL.md)",
+      "Edit(docs/rules/*)",
+      "Write(docs/rules/*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./execution/hooks/block_sensitive_edits.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./execution/hooks/block_dangerous_bash.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./execution/hooks/scan_forbidden_runtime.py"
+          }
+        ]
+      }
+    ]
+  }
+}

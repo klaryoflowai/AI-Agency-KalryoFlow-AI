@@ -1,0 +1,36 @@
+# Roadmap de Implementare
+
+## Săptămâna 1-2: Fundația MVP Zero API
+- [x] Aliniere arhitectură: Codex/Claude Code ca operatori, nu API runtime intern
+- [x] Execuția tehnică este separată în `backend-agent` + `frontend-agent` + `qa-agent`
+- [ ] Inițializare Git + GitHub pentru versionare
+- [ ] Creare cont Supabase și rulare schema DB
+- [ ] Creare cont n8n Cloud și primul webhook de test
+- [ ] Configurare dashboard minim sau flux local pe `projects/template`
+
+## Săptămâna 3-4: Primii Agenți Operaționali
+- [ ] Eval Agent funcțional ca workflow manual/semi-manual
+- [ ] BD Agent funcțional pentru propuneri aprobate de CEO
+- [ ] Backend Agent + Frontend Agent rulați pe proiect fictiv
+- [ ] QA Agent validează output-urile înainte de livrare
+- [ ] Date salvate corect în Supabase și în folderul proiectului
+
+## Luna 2: Dashboard + Orchestrare
+- [ ] UI Dashboard construit în Next.js
+- [ ] Conectare dashboard la Supabase
+- [ ] Orchestrator n8n creează `agent_runs` și statusuri
+- [ ] Ops Agent generează SOP-uri și workflow designs
+- [ ] Client Success Agent adăugat pentru follow-up 7/30/90 zile
+
+## Luna 3: Primul Client Real
+- [ ] Primul proiect real rulat prin sistem
+- [ ] Costurile și timpul de livrare măsurate
+- [ ] Gaps documentate în `docs/rules/` sau `agents/*/memory/`
+- [ ] Decizie: ce componente merită runtime API plătit
+
+## Luna 4-6: Automatizări Client-Side
+- [ ] Pentru fiecare client, runtime API doar cu aprobare explicită
+- [ ] Cost LLM estimat inclus în ofertă și monitorizat
+- [ ] Marketing Agent activ pe studii de caz
+- [ ] 3-5 proiecte gestionate simultan
+- [ ] Primele retainere semnate
