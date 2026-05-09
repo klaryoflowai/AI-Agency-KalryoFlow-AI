@@ -17,8 +17,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: infrastructure/dashboard/package-lock.json
+
       - name: Install test dependencies
         run: python -m pip install -r requirements-dev.txt
+
+      - name: Install dashboard dependencies
+        working-directory: infrastructure/dashboard
+        run: npm ci
 
       - name: Compile Python
         run: python -m py_compile execution/agency.py execution/validate_supabase_migrations.py execution/validate_n8n_workflows.py execution/hooks/*.py
@@ -34,3 +45,11 @@ jobs:
 
       - name: Run tests
         run: python -m pytest
+
+      - name: Lint dashboard
+        working-directory: infrastructure/dashboard
+        run: npm run lint
+
+      - name: Build dashboard
+        working-directory: infrastructure/dashboard
+        run: npm run build

@@ -10,9 +10,10 @@
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
 - [x] Workflow-to-Skill Factory documentat + Client Context Pack per proiect
 - [x] n8n webhook workflow pregatit offline + validator local
+- [x] Dashboard MVP local-first in Next.js
 - [ ] Creare cont Supabase și rulare schema DB
 - [ ] Creare cont n8n Cloud și primul webhook de test
-- [ ] Configurare dashboard minim sau flux local pe `projects/template`
+- [x] Configurare dashboard minim sau flux local pe `projects/template`
 
 ## Săptămâna 3-4: Primii Agenți Operaționali
 - [x] Eval Agent funcțional ca workflow manual/semi-manual
@@ -23,7 +24,7 @@
 - [ ] Date salvate corect în Supabase live
 
 ## Luna 2: Dashboard + Orchestrare
-- [ ] UI Dashboard construit în Next.js
+- [x] UI Dashboard construit în Next.js
 - [ ] Conectare dashboard la Supabase
 - [ ] Orchestrator n8n creează `agent_runs` și statusuri
 - [ ] Ops Agent generează SOP-uri și workflow designs

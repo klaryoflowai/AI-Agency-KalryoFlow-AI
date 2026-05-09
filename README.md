@@ -62,8 +62,9 @@ ai-agency/
 - [x] Workflow-to-Skill Factory + Client Context Pack
 - [x] Primul proiect pilot rulat end-to-end cu QA PASS
 - [x] n8n Cloud-safe webhook workflow + validator local
+- [x] Dashboard UI MVP local-first în Next.js
 - [ ] Infrastructură configurată
-- [ ] Dashboard UI
+- [ ] Dashboard conectat la Supabase live
 
 ---
 
@@ -80,7 +81,7 @@ ai-agency/
 | Runner MVP | `python3 execution/agency.py` |
 | Sync DB | `python3 execution/agency.py sync-supabase <project_id>` |
 | n8n workflow QA | `python3 execution/validate_n8n_workflows.py` |
-| CI | GitHub Actions + pytest |
+| CI | GitHub Actions + pytest + Next.js build |
 | Competenta interna | Workflow-to-Skill Factory |
 
 ---
