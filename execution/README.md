@@ -54,6 +54,14 @@ Valideaza migrarea Supabase fara conectare live:
 python3 execution/validate_supabase_migrations.py
 ```
 
+Rulează testele locale:
+
+```bash
+PYTHONPATH=.tmp/test-deps python3 -m pytest
+```
+
+În CI, GitHub Actions instalează `requirements-dev.txt` și rulează compile, migrații, scan runtime și pytest.
+
 ## Ownership Implicit
 
 - `backend-agent` → Codex
@@ -66,6 +74,7 @@ Runner-ul verifică:
 - `schema_version` corect;
 - câmpuri obligatorii per agent;
 - reguli speciale pentru Eval Agent și QA Agent;
+- contractele v2 pentru BD, Marketing și Client Success;
 - QA delivery gate: `qa_score >= 7`, status aprobat, SOW coverage 100%.
 - Next-action gate: QA nu poate porni până când agenții anteriori activi nu au validare `PASS`.
 

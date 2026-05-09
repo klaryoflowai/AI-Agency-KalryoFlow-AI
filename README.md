@@ -57,6 +57,7 @@ ai-agency/
 - [x] Migrații Supabase pregătite local + validator RLS
 - [x] Strategie MVP zero API definită
 - [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
+- [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
 - [ ] Infrastructură configurată
 - [ ] Dashboard UI
 - [ ] Primul proiect pilot
@@ -74,6 +75,7 @@ ai-agency/
 | QA browser | Playwright |
 | Versionare | Git + GitHub |
 | Runner MVP | `python3 execution/agency.py` |
+| CI | GitHub Actions + pytest |
 
 ---
 
