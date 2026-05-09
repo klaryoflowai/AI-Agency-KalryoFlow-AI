@@ -30,6 +30,8 @@ Promptul pentru operator va fi creat în:
 .tmp/agency/<project_id>/<timestamp>_<agent>_prompt.md
 ```
 
+Prompt packet-ul include acum si `projects/<id>/CONTEXT.md`, daca exista, pentru a pastra memoria clientului in fiecare run.
+
 Validează output-ul JSON produs de agent:
 
 ```bash

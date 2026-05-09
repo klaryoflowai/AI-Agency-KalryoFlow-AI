@@ -7,6 +7,7 @@
 - [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
 - [x] Migrare Supabase initiala pregatita local + validator fara conectare live
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
+- [x] Workflow-to-Skill Factory documentat + Client Context Pack per proiect
 - [ ] Creare cont Supabase și rulare schema DB
 - [ ] Creare cont n8n Cloud și primul webhook de test
 - [ ] Configurare dashboard minim sau flux local pe `projects/template`

@@ -312,6 +312,8 @@ def prompt_packet(project_id: str, contract: AgentContract) -> str:
     project_path = project_dir(project_id)
     skill_path = ROOT / "agents" / contract.name / "SKILL.md"
     project_md = read_text(project_path / "PROJECT.md")
+    context_path = project_path / "CONTEXT.md"
+    context_md = context_path.read_text(encoding="utf-8") if context_path.is_file() else "No CONTEXT.md found for this project."
     skill_md = read_text(skill_path)
     pricing_md = read_text(ROOT / "resources" / "pricing-matrix.md")
     owner_doc = read_text(ROOT / "docs" / "codex-claude-operating-model.md")
@@ -352,6 +354,11 @@ python3 execution/agency.py validate {contract.name} {project_id}
 ## Project
 ```markdown
 {project_md}
+```
+
+## Client Context Pack
+```markdown
+{context_md}
 ```
 
 ## Agent Skill

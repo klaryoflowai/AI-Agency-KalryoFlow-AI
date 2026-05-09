@@ -35,6 +35,22 @@ Ownership pe directoare:
 
 Dacă trebuie schimbat ownership-ul pentru un proiect, se notează în `projects/<id>/PROJECT.md` înainte de lucru.
 
+## Task Brief pentru Operatori
+
+Fiecare task non-trivial trebuie sa includa:
+
+- `project_id`;
+- agentul responsabil;
+- owner pe fisiere;
+- output asteptat;
+- comanda de validare;
+- context pack relevant;
+- QA evidence cerut.
+
+Template: `resources/templates/operator-task-brief.md`.
+
+Regula practica: Codex/Claude Code sunt operatori, nu doar chat-uri. Un task bun catre operator seamana cu un ticket de lucru: clar, limitat, verificabil.
+
 ## Modele și Efort
 - Codex reasoning `medium`: lucru normal.
 - Codex reasoning `high/xhigh`: arhitectură, securitate, buguri dificile.
@@ -44,6 +60,16 @@ Dacă trebuie schimbat ownership-ul pentru un proiect, se notează în `projects
 
 ## Runtime Client
 Automatizările client care trebuie să ruleze fără operator pot folosi API LLM doar după aprobare. Aceasta este o fază separată de MVP.
+
+## Workflow-to-Skill Factory
+
+Cand un workflow client a fost rulat cu succes si QA score >= 7, il putem transforma intr-un skill candidate folosind:
+
+- `resources/templates/workflow-capture-template.md`;
+- `resources/templates/skill-candidate-template.md`;
+- `resources/templates/qa-evidence-checklist.md`.
+
+Nu se creeaza sau modifica `SKILL.md` fara aprobare explicita. Pana atunci, skill candidate ramane document operational.
 
 ## Guardrails Claude Code
 Project settings în `.claude/settings.json` activează:

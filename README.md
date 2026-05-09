@@ -58,6 +58,7 @@ ai-agency/
 - [x] Strategie MVP zero API definită
 - [x] Execution Runner v0 pentru prompt packets, validare JSON și next-action
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
+- [x] Workflow-to-Skill Factory + Client Context Pack
 - [ ] Infrastructură configurată
 - [ ] Dashboard UI
 - [ ] Primul proiect pilot
@@ -76,6 +77,7 @@ ai-agency/
 | Versionare | Git + GitHub |
 | Runner MVP | `python3 execution/agency.py` |
 | CI | GitHub Actions + pytest |
+| Competenta interna | Workflow-to-Skill Factory |
 
 ---
 

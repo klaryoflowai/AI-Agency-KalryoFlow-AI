@@ -51,17 +51,29 @@ AGENT = Role Prompt      (identitate + responsabilități)
 ```
 1. CEO completează brieful în Dashboard sau în projects/<id>/PROJECT.md
 2. Se creează project_id unic în Supabase și folder local de proiect
-3. Orchestratorul primește project_id + brief
-4. Eval Agent analizează → returnează plan JSON + SOW draft
-5. CEO aprobă scope-ul și costul
-6. Orchestratorul activează Backend, Frontend, Ops, BD etc. după plan
-7. `execution/agency.py` generează prompt packet-uri pentru operatorii Codex/Claude Code
-8. Codex/Claude Code execută agenții ca operatori, nu ca API runtime
-9. Runner-ul validează JSON-urile de output și loghează local în `.tmp/agency/`
-10. Output-urile se salvează în Supabase și în projects/<id>/outputs/
-11. QA Agent verifică tot înainte de livrare
-12. Client Success Agent preia follow-up la 7/30/90 zile
+3. Se completează Client Context Pack în projects/<id>/CONTEXT.md
+4. Orchestratorul primește project_id + brief + context pack
+5. Eval Agent analizează → returnează plan JSON + SOW draft
+6. CEO aprobă scope-ul și costul
+7. Orchestratorul activează Backend, Frontend, Ops, BD etc. după plan
+8. `execution/agency.py` generează prompt packet-uri pentru operatorii Codex/Claude Code
+9. Codex/Claude Code execută agenții ca operatori, nu ca API runtime
+10. Runner-ul validează JSON-urile de output și loghează local în `.tmp/agency/`
+11. Output-urile se salvează în Supabase și în projects/<id>/outputs/
+12. QA Agent verifică tot înainte de livrare
+13. Workflow-to-Skill Factory propune skill candidates doar după run validat
+14. Client Success Agent preia follow-up la 7/30/90 zile
 ```
+
+## Competente Operationale
+
+| Competenta | Rol | Artefacte |
+|------------|-----|-----------|
+| Workflow-to-Skill Factory | transforma procese manuale validate in skill candidates | `docs/competencies/workflow-to-skill-factory.md` |
+| Client Context Pack | memorie operationala per client | `projects/<id>/CONTEXT.md` |
+| QA Evidence | dovada verificabila pentru livrabile | `resources/templates/qa-evidence-checklist.md` |
+| Browser Automation | automatizare/testare cand nu exista API | Playwright, browser control, screenshots |
+| Agentic Payments Design | design cu guardrails pentru plati viitoare | aprobare umana, limite, audit log |
 
 ---
 

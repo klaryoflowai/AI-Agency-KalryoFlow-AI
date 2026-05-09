@@ -47,6 +47,14 @@ sed -i.bak \
 
 rm -f "$PROJECT_DIR/PROJECT.md.bak"
 
+# --- Personalizează CONTEXT.md dacă există ---
+if [ -f "$PROJECT_DIR/CONTEXT.md" ]; then
+  sed -i.bak \
+    -e "s/\[NumeClient\]/$CLIENT_NAME/g" \
+    "$PROJECT_DIR/CONTEXT.md"
+  rm -f "$PROJECT_DIR/CONTEXT.md.bak"
+fi
+
 # --- Personalizează .env.project ---
 sed -i.bak \
   -e "s/YYYY-MM_NumeClient/$PROJECT_ID/g" \
