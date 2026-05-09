@@ -1,0 +1,91 @@
+{
+  "name": "AI Agency - Orchestrator Webhook MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agency/project-event",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5c2b5ef9-cf85-41b8-9c2f-bb0bda49b6a1",
+      "name": "Project Event Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "agency-project-event"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nconst body = raw.body ?? raw;\nconst allowedEvents = new Set([\n  'project.created',\n  'agent.prepared',\n  'agent.output_submitted',\n  'agent.validated',\n  'qa.approved',\n  'delivery.ready',\n]);\n\nconst projectId = body.project_id;\nconst eventType = body.event_type;\nconst agent = body.agent ?? null;\nconst status = body.status ?? null;\n\nif (!projectId || !eventType) {\n  return [{\n    json: {\n      ok: false,\n      error: 'project_id and event_type are required',\n      accepted_events: Array.from(allowedEvents),\n    },\n  }];\n}\n\nif (!allowedEvents.has(eventType)) {\n  return [{\n    json: {\n      ok: false,\n      project_id: projectId,\n      event_type: eventType,\n      error: 'Unsupported event_type',\n      accepted_events: Array.from(allowedEvents),\n    },\n  }];\n}\n\nlet recommendedAction = 'record_event';\nlet operatorCommand = null;\n\nif (eventType === 'project.created') {\n  recommendedAction = 'prepare_eval_agent';\n  operatorCommand = `python3 execution/agency.py prepare eval-agent ${projectId}`;\n}\n\nif (eventType === 'agent.output_submitted' && agent) {\n  recommendedAction = 'validate_agent_output';\n  operatorCommand = `python3 execution/agency.py validate ${agent} ${projectId}`;\n}\n\nif (eventType === 'agent.validated') {\n  recommendedAction = 'ask_runner_for_next_action';\n  operatorCommand = `python3 execution/agency.py next ${projectId}`;\n}\n\nif (eventType === 'delivery.ready' || eventType === 'qa.approved') {\n  recommendedAction = 'sync_supabase_dry_run';\n  operatorCommand = `python3 execution/agency.py sync-supabase ${projectId}`;\n}\n\nreturn [{\n  json: {\n    ok: true,\n    project_id: projectId,\n    event_type: eventType,\n    agent,\n    status,\n    recommended_action: recommendedAction,\n    operator_command: operatorCommand,\n    zero_api_runtime: true,\n    ceo_approval_required_for_external_actions: true,\n  },\n}];"
+      },
+      "id": "35b9cf13-fc53-4c78-a438-99fc25f6c3a5",
+      "name": "Validate and Route Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "8534a8e0-c1ed-4a4e-94e1-998f24ee1d1b",
+      "name": "Respond JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Project Event Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate and Route Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate and Route Event": {
+      "main": [
+        [
+          {
+            "node": "Respond JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "ai-agency"
+    },
+    {
+      "name": "zero-api-mvp"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-05-09T00:00:00.000Z",
+  "versionId": "agency-orchestrator-webhook-v1"
+}

@@ -21,10 +21,13 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Compile Python
-        run: python -m py_compile execution/agency.py execution/validate_supabase_migrations.py execution/hooks/*.py
+        run: python -m py_compile execution/agency.py execution/validate_supabase_migrations.py execution/validate_n8n_workflows.py execution/hooks/*.py
 
       - name: Validate Supabase migrations
         run: python execution/validate_supabase_migrations.py
+
+      - name: Validate n8n workflows
+        run: python execution/validate_n8n_workflows.py
 
       - name: Scan forbidden runtime drift
         run: python execution/hooks/scan_forbidden_runtime.py

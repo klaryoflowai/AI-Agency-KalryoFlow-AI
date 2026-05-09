@@ -101,7 +101,7 @@ Notă: Orchestratorul coordonează, dar nu livrează direct lucrări client. Exe
 |-------|------|-----|
 | AI Operator MVP | Codex + Claude Code | Analiză, implementare, QA, documentație |
 | Runtime LLM client | API plătit opțional | Doar pentru automatizări unattended aprobate și facturate |
-| Orchestrare | n8n Cloud | Logica de rutare, statusuri, webhook-uri |
+| Orchestrare | n8n Cloud | Webhook-uri, rutare evenimente, statusuri; fara shell commands pe Cloud |
 | Date | Supabase | Memoria sistemului și jurnal de execuție |
 | UI | Next.js pe Vercel | Dashboard vizual |
 | QA | Playwright, pytest, Vitest | Verificare livrabile |

@@ -9,6 +9,7 @@
 - [x] Runner Supabase sync dry-run pregatit, live doar cu `--apply`
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
 - [x] Workflow-to-Skill Factory documentat + Client Context Pack per proiect
+- [x] n8n webhook workflow pregatit offline + validator local
 - [ ] Creare cont Supabase și rulare schema DB
 - [ ] Creare cont n8n Cloud și primul webhook de test
 - [ ] Configurare dashboard minim sau flux local pe `projects/template`

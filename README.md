@@ -61,6 +61,7 @@ ai-agency/
 - [x] Teste automate + GitHub Actions pentru runner, migrații și guardrails
 - [x] Workflow-to-Skill Factory + Client Context Pack
 - [x] Primul proiect pilot rulat end-to-end cu QA PASS
+- [x] n8n Cloud-safe webhook workflow + validator local
 - [ ] Infrastructură configurată
 - [ ] Dashboard UI
 
@@ -78,6 +79,7 @@ ai-agency/
 | Versionare | Git + GitHub |
 | Runner MVP | `python3 execution/agency.py` |
 | Sync DB | `python3 execution/agency.py sync-supabase <project_id>` |
+| n8n workflow QA | `python3 execution/validate_n8n_workflows.py` |
 | CI | GitHub Actions + pytest |
 | Competenta interna | Workflow-to-Skill Factory |
 
